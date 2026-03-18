@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { useState } from 'react'
+import { X, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import { useApp } from '@/lib/context'
 import type { FuelLog } from '@/lib/store'
@@ -16,6 +16,8 @@ export function FuelLogForm({ vehicleId, onClose, editLog }: FuelLogFormProps) {
   const { addFuelLog, updateFuelLog, data } = useApp()
   const isEdit = !!editLog
   const defaultPrice = data.defaultFuelPrice
+  const vehicle = data.vehicles.find(v => v.id === vehicleId)
+  const currentOdometer = vehicle?.currentOdometer ?? 0
 
   const [date, setDate] = useState(editLog?.date ?? new Date().toISOString().slice(0, 16))
   const [pricePerLitre, setPricePerLitre] = useState(editLog?.pricePerLitre?.toString() ?? defaultPrice.toString())
@@ -24,6 +26,9 @@ export function FuelLogForm({ vehicleId, onClose, editLog }: FuelLogFormProps) {
   const [odometer, setOdometer] = useState(editLog?.odometer?.toString() ?? '')
   const [notes, setNotes] = useState(editLog?.notes ?? '')
   const [errors, setErrors] = useState<Record<string, string>>({})
+
+  const odometerNum = odometer ? Number(odometer) : null
+  const odometerLower = odometerNum !== null && !isNaN(odometerNum) && odometerNum < currentOdometer
 
   // Auto-calculate litres when amount changes
   function handleAmountChange(val: string) {
@@ -159,9 +164,17 @@ export function FuelLogForm({ vehicleId, onClose, editLog }: FuelLogFormProps) {
               type="number"
               value={odometer}
               onChange={e => setOdometer(e.target.value)}
-              placeholder="e.g. 15200"
+              placeholder={`e.g. ${currentOdometer > 0 ? currentOdometer.toLocaleString('en-IN') : '15200'}`}
               className={inputClass}
             />
+            {odometerLower && (
+              <div className="flex items-start gap-2 mt-2 p-2.5 rounded-xl bg-[oklch(0.95_0.05_60)] text-[oklch(0.45_0.12_60)]">
+                <AlertTriangle size={13} strokeWidth={1.75} className="mt-0.5 shrink-0" />
+                <p className="text-xs leading-relaxed font-medium">
+                  This value is lower than the current odometer. It will not update the main reading. Use the correct past date if needed.
+                </p>
+              </div>
+            )}
           </div>
 
           <div>

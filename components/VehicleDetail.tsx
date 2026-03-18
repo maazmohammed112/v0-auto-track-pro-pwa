@@ -132,7 +132,7 @@ export function VehicleDetail({ vehicleId, onBack }: VehicleDetailProps) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto hide-scrollbar px-4 pb-32">
+      <div className="flex-1 overflow-y-auto hide-scrollbar px-4 pb-10">
         {activeTab === 'overview' && (
           <div className="flex flex-col gap-4">
             {/* Odometer card */}

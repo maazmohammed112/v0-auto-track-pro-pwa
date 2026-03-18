@@ -1,16 +1,17 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Car } from 'lucide-react'
+import { Plus, Car, UserCircle } from 'lucide-react'
 import { useApp } from '@/lib/context'
 import { VehicleCard } from './VehicleCard'
 import { AddVehicleForm } from './AddVehicleForm'
 
 interface HomePageProps {
   onSelectVehicle: (vehicleId: string) => void
+  onGoToSettings: () => void
 }
 
-export function HomePage({ onSelectVehicle }: HomePageProps) {
+export function HomePage({ onSelectVehicle, onGoToSettings }: HomePageProps) {
   const { data } = useApp()
   const [showAddVehicle, setShowAddVehicle] = useState(false)
 
@@ -21,9 +22,19 @@ export function HomePage({ onSelectVehicle }: HomePageProps) {
   return (
     <div className="min-h-screen bg-background relative">
       {/* Header */}
-      <div className="px-5 pt-14 pb-6">
-        <p className="text-sm text-muted-foreground font-medium">{greeting},</p>
-        <h1 className="text-2xl font-bold text-foreground text-balance">{firstName} 👋</h1>
+      <div className="px-5 pt-14 pb-6 flex items-center justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground font-medium">{greeting},</p>
+          <h1 className="text-2xl font-bold text-foreground text-balance">{firstName}</h1>
+        </div>
+        <button
+          onClick={onGoToSettings}
+          className="w-10 h-10 rounded-2xl bg-card flex items-center justify-center"
+          style={{ boxShadow: 'var(--shadow-clay)' }}
+          aria-label="Go to settings"
+        >
+          <UserCircle size={22} strokeWidth={1.75} className="text-foreground" />
+        </button>
       </div>
 
       {/* Vehicles section */}
@@ -52,7 +63,7 @@ export function HomePage({ onSelectVehicle }: HomePageProps) {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col gap-3 pb-32">
+          <div className="flex flex-col gap-3 pb-36">
             {data.vehicles.map(vehicle => (
               <VehicleCard
                 key={vehicle.id}
@@ -67,7 +78,7 @@ export function HomePage({ onSelectVehicle }: HomePageProps) {
       {/* FAB */}
       <button
         onClick={() => setShowAddVehicle(true)}
-        className="fixed bottom-24 right-5 z-40 w-14 h-14 rounded-full flex items-center justify-center text-white transition-all active:scale-90"
+        className="fixed bottom-28 right-5 z-40 w-14 h-14 rounded-full flex items-center justify-center text-white transition-all active:scale-90"
         style={{
           background: 'oklch(0.55 0.18 250)',
           boxShadow: '0 6px 24px oklch(0.55 0.18 250 / 0.45)',

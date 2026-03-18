@@ -72,7 +72,7 @@ export function SettingsPage() {
         <p className="text-muted-foreground text-sm mt-0.5">Manage your preferences</p>
       </div>
 
-      <div className="px-5 pb-32 flex flex-col gap-5">
+      <div className="px-5 pb-36 flex flex-col gap-5">
         {/* Profile */}
         <section className="clay-card p-5 flex flex-col gap-4">
           <div className="flex items-center gap-2 mb-1">
@@ -203,7 +203,7 @@ export function SettingsPage() {
           <div className="clay-card w-full max-w-xs p-6 flex flex-col gap-4">
             <h3 className="text-base font-bold text-foreground">Backup Data</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              This will save your data as a JSON file to your device.
+              Your data will be securely saved as an encrypted file for future restore.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowBackupConfirm(false)} className="flex-1 py-3 rounded-2xl text-sm font-semibold bg-secondary text-foreground">Cancel</button>
@@ -228,7 +228,7 @@ export function SettingsPage() {
             </div>
             <h3 className="text-base font-bold text-foreground">Restore Data?</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
-              Restoring will replace all current data with the backup. This cannot be undone. Please proceed carefully.
+              Restoring data may create duplicate entries. Please proceed carefully.
             </p>
             <div className="flex gap-3">
               <button onClick={() => { setShowRestoreConfirm(false); setPendingFile(null) }} className="flex-1 py-3 rounded-2xl text-sm font-semibold bg-secondary text-foreground">Cancel</button>

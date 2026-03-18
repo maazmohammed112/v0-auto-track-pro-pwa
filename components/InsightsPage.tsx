@@ -95,7 +95,7 @@ export function InsightsPage() {
         </div>
       </div>
 
-      <div className="px-5 pb-32 flex flex-col gap-4">
+      <div className="px-5 pb-36 flex flex-col gap-4">
         {/* Total summary */}
         <div className="clay-card p-5">
           <p className="text-xs text-muted-foreground font-medium mb-1">Total Spend</p>

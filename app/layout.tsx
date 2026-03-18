@@ -13,7 +13,6 @@ const plusJakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: 'AutoTrackPro',
   description: 'Personal vehicle management — track fuel, service, and expenses for all your vehicles.',
-  generator: 'v0.app',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,

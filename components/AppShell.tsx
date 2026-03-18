@@ -89,7 +89,10 @@ export function AppShell() {
     <div className="relative">
       {/* Pages */}
       <div style={{ display: activeTab === 'home' ? 'block' : 'none' }}>
-        <HomePage onSelectVehicle={(id) => { setSelectedVehicleId(id) }} />
+        <HomePage
+          onSelectVehicle={(id) => { setSelectedVehicleId(id) }}
+          onGoToSettings={() => setActiveTab('settings')}
+        />
       </div>
       <div style={{ display: activeTab === 'insights' ? 'block' : 'none' }}>
         <InsightsPage />

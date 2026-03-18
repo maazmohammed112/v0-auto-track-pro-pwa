@@ -83,7 +83,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [data, persist])
 
   const updateFuelLog = useCallback((id: string, updates: Partial<FuelLog>) => {
-    persist({ ...data, fuelLogs: data.fuelLogs.map(l => l.id === id ? { ...l, ...updates } : l) })
+    const updatedLogs = data.fuelLogs.map(l => l.id === id ? { ...l, ...updates } : l)
+    const updatedLog = updatedLogs.find(l => l.id === id)
+    let updatedVehicles = data.vehicles
+    if (updatedLog?.odometer) {
+      updatedVehicles = data.vehicles.map(v =>
+        v.id === updatedLog.vehicleId && updatedLog.odometer! > v.currentOdometer
+          ? { ...v, currentOdometer: updatedLog.odometer!, lastOdometerUpdate: new Date().toISOString() }
+          : v
+      )
+    }
+    persist({ ...data, fuelLogs: updatedLogs, vehicles: updatedVehicles })
   }, [data, persist])
 
   const deleteFuelLog = useCallback((id: string) => {
@@ -104,7 +114,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [data, persist])
 
   const updateServiceLog = useCallback((id: string, updates: Partial<ServiceLog>) => {
-    persist({ ...data, serviceLogs: data.serviceLogs.map(l => l.id === id ? { ...l, ...updates } : l) })
+    const updatedLogs = data.serviceLogs.map(l => l.id === id ? { ...l, ...updates } : l)
+    const updatedLog = updatedLogs.find(l => l.id === id)
+    let updatedVehicles = data.vehicles
+    if (updatedLog?.odometer) {
+      updatedVehicles = data.vehicles.map(v =>
+        v.id === updatedLog.vehicleId && updatedLog.odometer! > v.currentOdometer
+          ? { ...v, currentOdometer: updatedLog.odometer!, lastOdometerUpdate: new Date().toISOString() }
+          : v
+      )
+    }
+    persist({ ...data, serviceLogs: updatedLogs, vehicles: updatedVehicles })
   }, [data, persist])
 
   const deleteServiceLog = useCallback((id: string) => {
