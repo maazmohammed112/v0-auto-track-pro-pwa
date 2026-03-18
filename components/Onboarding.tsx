@@ -30,11 +30,12 @@ export function Onboarding() {
         <div className="w-full max-w-sm flex flex-col items-center gap-8">
           {/* Logo */}
           <div className="flex flex-col items-center gap-3">
-            <div
-              className="w-20 h-20 rounded-3xl flex items-center justify-center"
-              style={{ background: 'oklch(0.55 0.18 250)', boxShadow: '0 8px 24px oklch(0.55 0.18 250 / 0.35)' }}
-            >
-              <Gauge size={38} strokeWidth={1.5} className="text-white" />
+            <div className="w-24 h-24 rounded-3xl overflow-hidden" style={{ boxShadow: '0 8px 28px oklch(0.22 0.01 260 / 0.18)' }}>
+              <img
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot_2026-03-19_010813-removebg-preview-ZuP0ZwKXi7cRjOo7ZEvHNIBYVNRydd.png"
+                alt="AutoTrackPro"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="text-center">
               <h1 className="text-3xl font-bold text-foreground tracking-tight">AutoTrackPro</h1>
@@ -70,11 +71,12 @@ export function Onboarding() {
       ) : (
         <div className="w-full max-w-sm flex flex-col items-center gap-8">
           <div className="text-center">
-            <div
-              className="w-16 h-16 rounded-3xl flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'oklch(0.55 0.18 250)', boxShadow: '0 8px 24px oklch(0.55 0.18 250 / 0.35)' }}
-            >
-              <Gauge size={30} strokeWidth={1.5} className="text-white" />
+            <div className="w-16 h-16 rounded-2xl overflow-hidden mx-auto mb-4" style={{ boxShadow: '0 8px 24px oklch(0.22 0.01 260 / 0.18)' }}>
+              <img
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot_2026-03-19_010813-removebg-preview-ZuP0ZwKXi7cRjOo7ZEvHNIBYVNRydd.png"
+                alt="AutoTrackPro"
+                className="w-full h-full object-cover"
+              />
             </div>
             <h2 className="text-2xl font-bold text-foreground">What should we call you?</h2>
             <p className="text-muted-foreground text-sm mt-2 leading-relaxed">

@@ -87,18 +87,19 @@ export function AddVehicleForm({ onClose, editVehicle }: AddVehicleFormProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/20 backdrop-blur-[2px]">
       <div
-        className="w-full max-w-md bg-card rounded-t-3xl p-6 pb-8 flex flex-col gap-5"
-        style={{ boxShadow: '0 -8px 40px oklch(0.22 0.01 260 / 0.14)' }}
+        className="w-full max-w-md bg-card rounded-t-3xl flex flex-col"
+        style={{ boxShadow: '0 -8px 40px oklch(0.22 0.01 260 / 0.14)', maxHeight: '92dvh' }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between">
+        {/* Header — sticky, never scrolls away */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
           <h2 className="text-lg font-bold text-foreground">{isEdit ? 'Edit Vehicle' : 'Add Vehicle'}</h2>
           <button onClick={onClose} className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
             <X size={16} strokeWidth={2} className="text-foreground" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* Scrollable form body */}
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4 overflow-y-auto px-6 pb-8">
           {/* Vehicle Type */}
           <div>
             <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">
@@ -199,6 +200,9 @@ export function AddVehicleForm({ onClose, editVehicle }: AddVehicleFormProps) {
           >
             {isEdit ? 'Save Changes' : 'Add Vehicle'}
           </button>
+
+          {/* Safe-area spacer so the Submit button clears the floating nav */}
+          <div className="h-2" aria-hidden />
         </form>
       </div>
     </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { User, Fuel, Download, Upload, Info, ChevronRight, AlertTriangle, Check, IdCard, MapPin, Calendar, Heart } from 'lucide-react'
+import { User, Fuel, Download, Upload, Info, ChevronRight, AlertTriangle, Check, IdCard, MapPin, Calendar, Heart, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { useApp } from '@/lib/context'
 import { exportBackup, importBackup } from '@/lib/store'
@@ -23,6 +23,7 @@ export function SettingsPage() {
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false)
   const [showBackupConfirm, setShowBackupConfirm] = useState(false)
   const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const [showAboutModal, setShowAboutModal] = useState(false)
 
   function saveName() {
     if (!name.trim()) return
@@ -280,18 +281,25 @@ export function SettingsPage() {
               <span className="text-sm font-semibold text-foreground">{value}</span>
             </div>
           ))}
-        </section>
 
-        {/* Developer credit footer */}
-        <footer className="flex flex-col items-center gap-3 py-6">
-          <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
-            <span>Made with</span>
-            <Heart size={12} strokeWidth={2} className="text-destructive fill-destructive" />
-            <span>by</span>
-            <span className="font-semibold text-foreground">AutoTrackPro Team</span>
+          {/* Clickable logo in About */}
+          <div className="pt-2 flex justify-center">
+            <button
+              onClick={() => setShowAboutModal(true)}
+              className="flex flex-col items-center gap-2 active:scale-95 transition-transform"
+              aria-label="About developer"
+            >
+              <div className="w-14 h-14 rounded-2xl overflow-hidden" style={{ boxShadow: '0 4px 16px oklch(0.22 0.01 260 / 0.15)' }}>
+                <img
+                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot_2026-03-19_010813-removebg-preview-ZuP0ZwKXi7cRjOo7ZEvHNIBYVNRydd.png"
+                  alt="AutoTrackPro logo"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <span className="text-xs text-muted-foreground">Tap for info</span>
+            </button>
           </div>
-          <p className="text-muted-foreground text-xs">2024 AutoTrackPro. All rights reserved.</p>
-        </footer>
+        </section>
       </div>
 
       {/* Backup confirmation dialog */}
@@ -341,19 +349,39 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* Footer with logo and credit */}
-      <div className="mt-10 pt-6 border-t border-border flex flex-col items-center gap-3 pb-10">
-        <div className="w-16 h-16 rounded-2xl overflow-hidden">
-          <img src="/logo.png" alt="AutoTrackPro" className="w-full h-full object-cover" />
-        </div>
-        <div className="text-center">
-          <p className="text-xs text-muted-foreground">Made with</p>
-          <div className="flex items-center justify-center gap-1">
-            <Heart size={14} className="text-red-500" />
-            <p className="text-xs font-medium text-foreground">by AutoTrackPro Team</p>
+      {/* About / Developer modal */}
+      {showAboutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/25 backdrop-blur-[2px] p-6">
+          <div className="clay-card w-full max-w-xs p-6 flex flex-col items-center gap-5">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden" style={{ boxShadow: '0 4px 20px oklch(0.22 0.01 260 / 0.18)' }}>
+              <img
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot_2026-03-19_010813-removebg-preview-ZuP0ZwKXi7cRjOo7ZEvHNIBYVNRydd.png"
+                alt="AutoTrackPro"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="text-center flex flex-col gap-1">
+              <h3 className="text-base font-bold text-foreground">AutoTrackPro</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Developed by{' '}
+                <span className="font-semibold text-foreground">Mohammed Maaz</span>.
+                Thank you for using AutoTrackPro.
+              </p>
+              <div className="flex items-center justify-center gap-1 mt-1 text-xs text-muted-foreground">
+                <span>Made with</span>
+                <Heart size={11} strokeWidth={2} className="text-destructive fill-destructive" />
+                <span>for every driver</span>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowAboutModal(false)}
+              className="w-full py-3 rounded-2xl text-sm font-semibold bg-secondary text-foreground transition-all active:scale-95"
+            >
+              Close
+            </button>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

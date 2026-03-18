@@ -60,9 +60,25 @@ export function LoadingScreen() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-6 p-6">
-      {/* Logo */}
-      <div className="w-24 h-24 rounded-3xl overflow-hidden mb-4">
-        <img src="/logo.png" alt="AutoTrackPro" className="w-full h-full object-cover" />
+      {/* Animated vehicle icon */}
+      <div className="relative w-20 h-20">
+        {vehicles.map(({ icon: Icon }, i) => (
+          <div
+            key={i}
+            className="absolute inset-0 flex items-center justify-center transition-all duration-300"
+            style={{
+              opacity: activeIndex === i ? 1 : 0,
+              transform: activeIndex === i ? 'scale(1) translateY(0)' : 'scale(0.8) translateY(8px)',
+            }}
+          >
+            <div
+              className="w-20 h-20 rounded-3xl flex items-center justify-center"
+              style={{ background: 'oklch(0.55 0.18 250)', boxShadow: '0 8px 28px oklch(0.55 0.18 250 / 0.35)' }}
+            >
+              <Icon size={36} strokeWidth={1.5} className="text-white" />
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* App name */}
