@@ -7,9 +7,22 @@ import { useApp } from '@/lib/context'
 export function MileageInsightsSection() {
   const { data } = useApp()
 
-  const { totalDistance, mileageBreakdown } = useMemo(() => {
+  const { totalDistance, fuelDistance, electricDistance, dominantType, mileageBreakdown } = useMemo(() => {
     // Calculate total distance as sum of all vehicle odometers
     const totalDistance = data.vehicles.reduce((sum, v) => sum + v.currentOdometer, 0)
+
+    // Calculate fuel vehicles total distance
+    const fuelDistance = data.vehicles
+      .filter(v => v.fuelType !== 'electric')
+      .reduce((sum, v) => sum + v.currentOdometer, 0)
+
+    // Calculate electric vehicles total distance
+    const electricDistance = data.vehicles
+      .filter(v => v.fuelType === 'electric')
+      .reduce((sum, v) => sum + v.currentOdometer, 0)
+
+    // Determine which type has more km
+    const dominantType = fuelDistance >= electricDistance ? 'fuel' : 'electric'
 
     // Per-vehicle breakdown with efficiency metrics
     const mileageBreakdown = data.vehicles.map(vehicle => {
@@ -40,10 +53,13 @@ export function MileageInsightsSection() {
       return { vehicle, kmpl, kmpc }
     })
 
-    return { totalDistance, mileageBreakdown }
+    return { totalDistance, fuelDistance, electricDistance, dominantType, mileageBreakdown }
   }, [data])
 
-  if (!data.mileageTrackingEnabled) return null
+  // Dynamic colors based on dominant vehicle type
+  const textColor = dominantType === 'fuel' ? 'text-[oklch(0.55_0.18_25)]' : 'text-[oklch(0.65_0.15_145)]'
+  const bgColor = dominantType === 'fuel' ? 'bg-[oklch(0.93_0.06_25)]' : 'bg-[oklch(0.93_0.05_145)]'
+  const iconColor = dominantType === 'fuel' ? 'text-[oklch(0.55_0.18_25)]' : 'text-[oklch(0.65_0.15_145)]'
 
   return (
     <div className="px-5 pb-4 flex flex-col gap-4">
@@ -52,10 +68,20 @@ export function MileageInsightsSection() {
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <p className="text-xs text-muted-foreground font-medium mb-1">Total Distance</p>
-            <p className="text-3xl font-bold text-foreground">{totalDistance.toLocaleString('en-IN')} km</p>
+            <p className={`text-3xl font-bold ${textColor}`}>{totalDistance.toLocaleString('en-IN')} km</p>
+            <div className="flex gap-4 mt-3 text-xs">
+              <div>
+                <span className="text-muted-foreground">Fuel: </span>
+                <span className="font-semibold text-[oklch(0.55_0.18_25)]">{fuelDistance.toLocaleString('en-IN')} km</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Electric: </span>
+                <span className="font-semibold text-[oklch(0.65_0.15_145)]">{electricDistance.toLocaleString('en-IN')} km</span>
+              </div>
+            </div>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-[oklch(0.93_0.06_250)] flex items-center justify-center">
-            <Navigation size={24} strokeWidth={1.5} className="text-[oklch(0.38_0.12_250)]" />
+          <div className={`w-12 h-12 rounded-2xl ${bgColor} flex items-center justify-center`}>
+            <Navigation size={24} strokeWidth={1.5} className={iconColor} />
           </div>
         </div>
       </div>
