@@ -1,11 +1,11 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { TrendingUp, Fuel, Wrench, Zap, BarChart2, Navigation, Eye, EyeOff } from 'lucide-react'
+import { TrendingUp, Fuel, Wrench, Zap, BarChart2, Settings } from 'lucide-react'
 import { useApp } from '@/lib/context'
 import { getTotalDistanceDriven, calculateKmPerLiter, calculateKmPerCharge } from '@/lib/store'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
-import { MileageInsightsSection } from './MileageInsightsSection'
+import { MileageModal } from './MileageModal'
 
 type Timeframe = 'weekly' | 'monthly' | 'all'
 
@@ -23,8 +23,9 @@ function fmt(n: number) { return `₹${n.toLocaleString('en-IN', { maximumFracti
 const COLORS = ['oklch(0.55 0.18 250)', 'oklch(0.65 0.15 145)', 'oklch(0.68 0.14 60)', 'oklch(0.60 0.16 310)']
 
 export function InsightsPage() {
-  const { data, toggleMileageTracking } = useApp()
+  const { data } = useApp()
   const [timeframe, setTimeframe] = useState<Timeframe>('monthly')
+  const [mileageModalOpen, setMileageModalOpen] = useState(false)
 
   const { totalFuel, totalService, totalCharging, totalAll, totalDistance, perVehicle, fuelEfficiency, chartData } = useMemo(() => {
     const filteredFuel = filterByTimeframe(data.fuelLogs, timeframe)
@@ -89,7 +90,9 @@ export function InsightsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <MileageModal isOpen={mileageModalOpen} onClose={() => setMileageModalOpen(false)} />
+      <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="px-5 pt-14 pb-4">
         <div className="flex items-center justify-between mb-3">
@@ -97,17 +100,15 @@ export function InsightsPage() {
             <h1 className="text-2xl font-bold text-foreground">Insights</h1>
             <p className="text-muted-foreground text-sm mt-0.5">Your expense overview</p>
           </div>
-          <button
-            onClick={toggleMileageTracking}
-            className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center transition-all active:scale-95 hover:bg-secondary/80"
-            title={data.mileageTrackingEnabled ? 'Hide mileage data' : 'Show mileage data'}
-          >
-            {data.mileageTrackingEnabled ? (
-              <Eye size={18} strokeWidth={1.75} className="text-primary" />
-            ) : (
-              <EyeOff size={18} strokeWidth={1.75} className="text-muted-foreground" />
-            )}
-          </button>
+          {data.mileageTrackingEnabled && (
+            <button
+              onClick={() => setMileageModalOpen(true)}
+              className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center transition-all active:scale-95 hover:bg-secondary/80"
+              title="View mileage details"
+            >
+              <Settings size={18} strokeWidth={1.75} className="text-primary" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -167,8 +168,7 @@ export function InsightsPage() {
           </div>
         </div>
 
-        {/* Mileage Insights Section - NEW */}
-        <MileageInsightsSection />
+
 
         {/* Bar chart */}
         {chartData.length > 0 && (
@@ -287,5 +287,6 @@ export function InsightsPage() {
         )}
       </div>
     </div>
+    </>
   )
 }
