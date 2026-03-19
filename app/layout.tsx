@@ -11,7 +11,6 @@ const plusJakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://autotrackpro.com'),
   title: 'AutoTrackPro - Vehicle Expense & Mileage Tracker',
   description: 'Track vehicle maintenance, fuel costs, service schedules, and mileage. Manage multiple cars with smart km-based reminders and detailed expense insights.',
   keywords: 'vehicle tracker, car maintenance, fuel tracker, mileage tracker, service reminders, car expenses, vehicle management app',
