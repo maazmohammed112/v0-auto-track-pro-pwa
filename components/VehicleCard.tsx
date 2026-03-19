@@ -40,7 +40,8 @@ export function VehicleCard({ vehicle, reminders, documents, onClick, onNavigate
   // Count overdue/expiring items
   const overdueReminders = reminders.filter(isReminderOverdue).length
   const upcomingReminders = reminders.filter(r => isReminderUpcoming(r, 3)).length
-  const expiringDocs = documents.filter(d => isDocumentExpired(d) || isDocumentExpiringSoon(d)).length
+  const expiringDocsList = documents.filter(d => isDocumentExpired(d) || isDocumentExpiringSoon(d))
+  const expiringDocs = expiringDocsList.length
   const totalAlerts = overdueReminders + expiringDocs
   const hasUpcoming = upcomingReminders > 0 && overdueReminders === 0
   
@@ -152,8 +153,8 @@ export function VehicleCard({ vehicle, reminders, documents, onClick, onNavigate
                   <button onClick={() => setShowDocumentPopup(false)} className="text-muted-foreground hover:text-foreground">×</button>
                 </div>
                 <div className="space-y-1.5 mb-3 max-h-32 overflow-y-auto">
-                  {expiringDocs.length > 0 ? (
-                    expiringDocs.slice(0, 3).map(d => (
+                  {expiringDocsList.length > 0 ? (
+                    expiringDocsList.slice(0, 3).map(d => (
                       <div key={d.id} className="text-xs text-muted-foreground py-1">
                         <p className="font-semibold text-foreground">{d.type.toUpperCase()}</p>
                         <p className="text-[10px]">
