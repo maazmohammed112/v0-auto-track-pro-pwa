@@ -11,8 +11,12 @@ const plusJakarta = Plus_Jakarta_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'AutoTrackPro',
-  description: 'Personal vehicle management — track fuel, service, and expenses for all your vehicles.',
+  title: 'AutoTrackPro - Vehicle Expense & Mileage Tracker',
+  description: 'Track vehicle maintenance, fuel costs, service schedules, and mileage. Manage multiple cars with smart km-based reminders and detailed expense insights.',
+  keywords: 'vehicle tracker, car maintenance, fuel tracker, mileage tracker, service reminders, car expenses, vehicle management app',
+  authors: [{ name: 'AutoTrackPro' }],
+  creator: 'AutoTrackPro',
+  publisher: 'AutoTrackPro',
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
@@ -22,6 +26,43 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: 'default',
     title: 'AutoTrackPro',
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://autotrackpro.com',
+    siteName: 'AutoTrackPro',
+    title: 'AutoTrackPro - Vehicle Expense & Mileage Tracker',
+    description: 'Track vehicle maintenance, fuel costs, service schedules, and mileage. Manage multiple cars with smart km-based reminders.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'AutoTrackPro - Vehicle Management App',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'AutoTrackPro - Vehicle Expense & Mileage Tracker',
+    description: 'Smart vehicle management with fuel tracking, mileage insights, and service reminders.',
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    nocache: false,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-snippet': -1,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+    },
+  },
+  verification: {
+    google: 'google-site-verification-code',
   },
 }
 

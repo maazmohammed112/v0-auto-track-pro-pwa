@@ -5,6 +5,7 @@ import { TrendingUp, Fuel, Wrench, Zap, BarChart2, Navigation, Eye, EyeOff } fro
 import { useApp } from '@/lib/context'
 import { getTotalDistanceDriven, calculateKmPerLiter, calculateKmPerCharge } from '@/lib/store'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { MileageInsightsSection } from './MileageInsightsSection'
 
 type Timeframe = 'weekly' | 'monthly' | 'all'
 
@@ -166,21 +167,8 @@ export function InsightsPage() {
           </div>
         </div>
 
-        {/* Total Distance KPI */}
-        {data.mileageTrackingEnabled && (
-          <div className="clay-card p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground font-medium mb-1">Total Distance</p>
-                <p className="text-3xl font-bold text-foreground">{totalDistance.toLocaleString('en-IN')} km</p>
-                {totalDistance === 0 && <p className="text-xs text-muted-foreground mt-1">Add fuel/charging logs with odometer readings</p>}
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-[oklch(0.93_0.06_250)] flex items-center justify-center">
-                <Navigation size={24} strokeWidth={1.5} className="text-[oklch(0.38_0.12_250)]" />
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Mileage Insights Section - NEW */}
+        <MileageInsightsSection />
 
         {/* Bar chart */}
         {chartData.length > 0 && (
@@ -261,21 +249,27 @@ export function InsightsPage() {
                   </div>
                 )}
                 {data.mileageTrackingEnabled && vehicle.fuelType !== 'electric' && kmpl && (
-                  <div className="flex-1 bg-secondary rounded-2xl p-3">
-                    <div className="flex items-center gap-1 mb-1">
-                      <TrendingUp size={12} strokeWidth={1.75} className="text-primary" />
-                      <p className="text-[10px] text-muted-foreground font-medium">km/L</p>
+                  <div className="flex-1 flex flex-col">
+                    <div className="flex-1 bg-secondary rounded-2xl p-3">
+                      <div className="flex items-center gap-1 mb-1">
+                        <TrendingUp size={12} strokeWidth={1.75} className="text-primary" />
+                        <p className="text-[10px] text-muted-foreground font-medium">km/L</p>
+                      </div>
+                      <p className="text-sm font-bold text-foreground">{kmpl.toFixed(1)}</p>
                     </div>
-                    <p className="text-sm font-bold text-foreground">{kmpl.toFixed(1)}</p>
+                    <p className="text-[9px] text-muted-foreground mt-1.5 leading-tight">Based on fuel logs with odometer readings</p>
                   </div>
                 )}
                 {data.mileageTrackingEnabled && vehicle.fuelType === 'electric' && kmpc && (
-                  <div className="flex-1 bg-[oklch(0.93_0.05_180)] rounded-2xl p-3">
-                    <div className="flex items-center gap-1 mb-1">
-                      <TrendingUp size={12} strokeWidth={1.75} className="text-[oklch(0.36_0.09_180)]" />
-                      <p className="text-[10px] text-[oklch(0.36_0.09_180)] font-medium">km/charge</p>
+                  <div className="flex-1 flex flex-col">
+                    <div className="flex-1 bg-[oklch(0.93_0.05_180)] rounded-2xl p-3">
+                      <div className="flex items-center gap-1 mb-1">
+                        <TrendingUp size={12} strokeWidth={1.75} className="text-[oklch(0.36_0.09_180)]" />
+                        <p className="text-[10px] text-[oklch(0.36_0.09_180)] font-medium">km/charge</p>
+                      </div>
+                      <p className="text-sm font-bold text-foreground">{kmpc.toFixed(1)}</p>
                     </div>
-                    <p className="text-sm font-bold text-foreground">{kmpc.toFixed(1)}</p>
+                    <p className="text-[9px] text-[oklch(0.36_0.09_180)] mt-1.5 leading-tight">Based on charging logs with odometer readings</p>
                   </div>
                 )}
                 {vehicle.fuelType === 'electric' && !kmpc && chargingCost === 0 && (

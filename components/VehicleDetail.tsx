@@ -556,6 +556,8 @@ export function VehicleDetail({ vehicleId, onBack, initialTab }: VehicleDetailPr
               reminders.map(r => {
                 const overdue = !r.isCompleted && isReminderOverdue(r)
                 const daysUntil = getReminderDaysUntil(r)
+                const vehicle = data.vehicles.find(v => v.id === vehicleId)
+                const kmRemaining = vehicle && r.dueMileage ? Math.max(0, r.dueMileage - vehicle.currentOdometer) : null
                 return (
                   <div
                     key={r.id}
@@ -577,13 +579,21 @@ export function VehicleDetail({ vehicleId, onBack, initialTab }: VehicleDetailPr
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Calendar size={11} strokeWidth={2} /> {formatDate(r.dueDate)}
-                        {!r.isCompleted && !overdue && daysUntil <= 7 && (
-                          <span className="text-[oklch(0.42_0.10_60)] font-medium ml-1">({daysUntil === 0 ? 'Today' : `${daysUntil}d left`})</span>
-                        )}
-                      </p>
-                      {r.dueMileage && <p className="text-xs text-muted-foreground mt-0.5">At {r.dueMileage.toLocaleString('en-IN')} km</p>}
+                      {r.isMileageBased ? (
+                        <>
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Gauge size={11} strokeWidth={2} /> Alert at {(r.dueMileage ? r.dueMileage - 200 : r.dueMileage).toLocaleString('en-IN')} km
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Due at {r.dueMileage?.toLocaleString('en-IN')} km {kmRemaining !== null && kmRemaining > 0 ? `(${kmRemaining.toLocaleString('en-IN')} km away)` : kmRemaining === 0 ? '(reached)' : ''}</p>
+                        </>
+                      ) : (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Calendar size={11} strokeWidth={2} /> {formatDate(r.dueDate)}
+                          {!r.isCompleted && !overdue && daysUntil <= 7 && (
+                            <span className="text-[oklch(0.42_0.10_60)] font-medium ml-1">({daysUntil === 0 ? 'Today' : `${daysUntil}d left`})</span>
+                          )}
+                        </p>
+                      )}
                       {r.notes && <p className="text-xs text-muted-foreground mt-0.5 italic truncate">{r.notes}</p>}
                     </div>
                     <div className="flex gap-2 shrink-0">

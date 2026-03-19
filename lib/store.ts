@@ -309,6 +309,7 @@ export function isSmartReminderDue(reminder: Reminder, currentOdometer: number):
     if (now - lastSnooze < 12 * 60 * 60 * 1000) return false
   }
   
+  // Alert triggers at dueMileage - 200, completes at dueMileage
   return currentOdometer >= reminder.dueMileage - 200 && currentOdometer < reminder.dueMileage
 }
 
