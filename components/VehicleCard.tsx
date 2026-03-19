@@ -79,24 +79,30 @@ export function VehicleCard({ vehicle, reminders, documents, onClick, onNavigate
           <h3 className="font-bold text-foreground text-base leading-tight truncate">{vehicle.name}</h3>
           <div className="flex items-center gap-1.5 shrink-0 relative">
             {hasUpcoming && (
-              <button
+              <div
                 onClick={handleReminderClick}
-                className="flex items-center gap-1 bg-[oklch(0.93_0.06_250)] text-[oklch(0.38_0.12_250)] text-[10px] font-semibold px-2 py-1 rounded-full hover:opacity-80 transition-opacity"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleReminderClick(e as any)}
+                className="flex items-center gap-1 bg-[oklch(0.93_0.06_250)] text-[oklch(0.38_0.12_250)] text-[10px] font-semibold px-2 py-1 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
                 title="Reminder due soon - click for details"
               >
                 <Bell size={10} strokeWidth={2} />
                 {upcomingReminders}
-              </button>
+              </div>
             )}
             {totalAlerts > 0 && (
-              <button
+              <div
                 onClick={handleDocumentClick}
-                className="flex items-center gap-1 bg-[oklch(0.93_0.05_60)] text-[oklch(0.42_0.10_60)] text-[10px] font-semibold px-2 py-1 rounded-full hover:opacity-80 transition-opacity"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleDocumentClick(e as any)}
+                className="flex items-center gap-1 bg-[oklch(0.93_0.05_60)] text-[oklch(0.42_0.10_60)] text-[10px] font-semibold px-2 py-1 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
                 title="Documents expiring or overdue - click for details"
               >
                 <AlertCircle size={10} strokeWidth={2} />
                 {totalAlerts}
-              </button>
+              </div>
             )}
             {pendingUpdate && (
               <div className="flex items-center gap-1 bg-[oklch(0.95_0.05_25)] text-[oklch(0.45_0.18_25)] text-[10px] font-semibold px-2 py-1 rounded-full" title="Odometer update needed">
@@ -112,7 +118,7 @@ export function VehicleCard({ vehicle, reminders, documents, onClick, onNavigate
                   <h4 className="text-xs font-bold text-foreground flex items-center gap-1">
                     <Bell size={12} strokeWidth={2} /> Upcoming Reminders
                   </h4>
-                  <button onClick={() => setShowReminderPopup(false)} className="text-muted-foreground hover:text-foreground">×</button>
+                  <div onClick={() => setShowReminderPopup(false)} role="button" tabIndex={0} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setShowReminderPopup(false)} className="text-muted-foreground hover:text-foreground cursor-pointer">×</div>
                 </div>
                 <div className="space-y-1.5 mb-3 max-h-32 overflow-y-auto">
                   {upcomingReminders > 0 ? (
@@ -130,15 +136,18 @@ export function VehicleCard({ vehicle, reminders, documents, onClick, onNavigate
                   )}
                 </div>
                 {onNavigateToReminders && (
-                  <button
+                  <div
                     onClick={() => {
                       setShowReminderPopup(false)
                       onNavigateToReminders()
                     }}
-                    className="w-full text-xs font-semibold text-primary bg-secondary hover:bg-secondary/80 rounded-lg py-1.5 flex items-center justify-center gap-1 transition-colors"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (setShowReminderPopup(false), onNavigateToReminders())}
+                    className="w-full text-xs font-semibold text-primary bg-secondary hover:bg-secondary/80 rounded-lg py-1.5 flex items-center justify-center gap-1 transition-colors cursor-pointer"
                   >
                     View All <ChevronRight size={12} strokeWidth={2} />
-                  </button>
+                  </div>
                 )}
               </div>
             )}
@@ -150,7 +159,7 @@ export function VehicleCard({ vehicle, reminders, documents, onClick, onNavigate
                   <h4 className="text-xs font-bold text-foreground flex items-center gap-1">
                     <FileText size={12} strokeWidth={2} /> Documents
                   </h4>
-                  <button onClick={() => setShowDocumentPopup(false)} className="text-muted-foreground hover:text-foreground">×</button>
+                  <div onClick={() => setShowDocumentPopup(false)} role="button" tabIndex={0} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setShowDocumentPopup(false)} className="text-muted-foreground hover:text-foreground cursor-pointer">×</div>
                 </div>
                 <div className="space-y-1.5 mb-3 max-h-32 overflow-y-auto">
                   {expiringDocsList.length > 0 ? (
@@ -167,15 +176,18 @@ export function VehicleCard({ vehicle, reminders, documents, onClick, onNavigate
                   )}
                 </div>
                 {onNavigateToDocuments && (
-                  <button
+                  <div
                     onClick={() => {
                       setShowDocumentPopup(false)
                       onNavigateToDocuments()
                     }}
-                    className="w-full text-xs font-semibold text-primary bg-secondary hover:bg-secondary/80 rounded-lg py-1.5 flex items-center justify-center gap-1 transition-colors"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (setShowDocumentPopup(false), onNavigateToDocuments())}
+                    className="w-full text-xs font-semibold text-primary bg-secondary hover:bg-secondary/80 rounded-lg py-1.5 flex items-center justify-center gap-1 transition-colors cursor-pointer"
                   >
                     View All <ChevronRight size={12} strokeWidth={2} />
-                  </button>
+                  </div>
                 )}
               </div>
             )}
