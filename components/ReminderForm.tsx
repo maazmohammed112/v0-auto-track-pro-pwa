@@ -196,22 +196,29 @@ export function ReminderForm({ vehicleId, onClose, editReminder }: ReminderFormP
                 className={`${inputClass} ${errors.dueMileage ? 'ring-2 ring-destructive/50' : ''}`}
               />
               {errors.dueMileage && <p className="text-destructive text-xs mt-1">{errors.dueMileage}</p>}
-              {isMileageBased && vehicle && dueMileage && (
-                <div className="mt-3 p-2.5 rounded-xl bg-secondary text-xs text-muted-foreground leading-relaxed">
-                  <p className="mb-1.5">
-                    <strong>Current odometer:</strong> {vehicle.currentOdometer.toLocaleString('en-IN')} km
-                  </p>
-                  <p className="mb-1.5">
-                    <strong>Service due at:</strong> {Number(dueMileage).toLocaleString('en-IN')} km
-                  </p>
-                  <p>
-                    <strong>Alert will trigger at:</strong> {Math.max(0, Number(dueMileage) - 200).toLocaleString('en-IN')} km
-                  </p>
-                  <p className="mt-1.5">
-                    <strong>Distance to alert:</strong> {Math.max(0, Number(dueMileage) - 200 - vehicle.currentOdometer).toLocaleString('en-IN')} km away
-                  </p>
-                </div>
-              )}
+              {isMileageBased && vehicle && dueMileage && (() => {
+                const dueMileageNum = Number(dueMileage)
+                const alertAt = Math.max(0, dueMileageNum - 200)
+                const kmRemaining = alertAt - vehicle.currentOdometer
+                const hasAlertPassed = vehicle.currentOdometer >= alertAt
+                
+                return (
+                  <div className="mt-3 p-2.5 rounded-xl bg-secondary text-xs text-muted-foreground leading-relaxed">
+                    <p className="mb-1.5">
+                      <strong>Current odometer:</strong> {vehicle.currentOdometer.toLocaleString('en-IN')} km
+                    </p>
+                    <p className="mb-1.5">
+                      <strong>Service due at:</strong> {dueMileageNum.toLocaleString('en-IN')} km
+                    </p>
+                    <p className="mb-1.5">
+                      <strong>Alert will trigger at:</strong> {alertAt.toLocaleString('en-IN')} km
+                    </p>
+                    <p>
+                      <strong>Distance to alert:</strong> {hasAlertPassed ? <span className="text-destructive">Alert already triggered ({Math.abs(kmRemaining).toLocaleString('en-IN')} km ago)</span> : <span>{kmRemaining.toLocaleString('en-IN')} km away</span>}
+                    </p>
+                  </div>
+                )
+              })()}
             </div>
           )}
 

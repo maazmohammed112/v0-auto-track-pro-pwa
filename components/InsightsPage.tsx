@@ -5,6 +5,7 @@ import { TrendingUp, Fuel, Wrench, Zap, BarChart2, Navigation, Eye, EyeOff } fro
 import { useApp } from '@/lib/context'
 import { getTotalDistanceDriven, calculateKmPerLiter, calculateKmPerCharge } from '@/lib/store'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { MileageInsightsSection } from './MileageInsightsSection'
 
 type Timeframe = 'weekly' | 'monthly' | 'all'
 
@@ -166,21 +167,8 @@ export function InsightsPage() {
           </div>
         </div>
 
-        {/* Total Distance KPI */}
-        {data.mileageTrackingEnabled && (
-          <div className="clay-card p-5">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground font-medium mb-1">Total Distance</p>
-                <p className="text-3xl font-bold text-foreground">{totalDistance.toLocaleString('en-IN')} km</p>
-                {totalDistance === 0 && <p className="text-xs text-muted-foreground mt-1">Add fuel/charging logs with odometer readings</p>}
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-[oklch(0.93_0.06_250)] flex items-center justify-center">
-                <Navigation size={24} strokeWidth={1.5} className="text-[oklch(0.38_0.12_250)]" />
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Mileage Insights Section - NEW */}
+        <MileageInsightsSection />
 
         {/* Bar chart */}
         {chartData.length > 0 && (
