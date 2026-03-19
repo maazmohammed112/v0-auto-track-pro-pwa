@@ -316,3 +316,28 @@ export function getReminderKmRemaining(reminder: Reminder, currentOdometer: numb
   if (!reminder.dueMileage) return -1
   return Math.max(0, reminder.dueMileage - currentOdometer)
 }
+
+export function isReminderDueToday(reminder: Reminder): boolean {
+  if (reminder.isCompleted) return false
+  const dueDate = new Date(reminder.dueDate)
+  const today = new Date()
+  
+  return (
+    dueDate.getFullYear() === today.getFullYear() &&
+    dueDate.getMonth() === today.getMonth() &&
+    dueDate.getDate() === today.getDate()
+  )
+}
+
+export function shouldShowReminderDueAlert(reminder: Reminder): boolean {
+  if (!isReminderDueToday(reminder)) return false
+  
+  // Check if snooze has expired (2 hours)
+  if (reminder.lastSnoozedAt) {
+    const lastSnooze = new Date(reminder.lastSnoozedAt).getTime()
+    const now = Date.now()
+    if (now - lastSnooze < 2 * 60 * 60 * 1000) return false
+  }
+  
+  return true
+}

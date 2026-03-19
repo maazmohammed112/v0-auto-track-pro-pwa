@@ -54,8 +54,19 @@ export function InsightsPage() {
           if (totalLitres > 0 && totalKm > 0) kmpl = totalKm / totalLitres
         }
       }
+      
+      // Charging efficiency for electric vehicles
+      let kmpc: number | null = null
+      if (v.fuelType === 'electric' && vCharging.length >= 2) {
+        const withOdo = vCharging.filter(l => l.odometer).sort((a, b) => (a.odometer ?? 0) - (b.odometer ?? 0))
+        if (withOdo.length >= 2) {
+          const totalKm = (withOdo[withOdo.length - 1].odometer ?? 0) - (withOdo[0].odometer ?? 0)
+          const chargeCount = withOdo.length - 1
+          if (chargeCount > 0 && totalKm > 0) kmpc = totalKm / chargeCount
+        }
+      }
 
-      return { vehicle: v, fuelCost, serviceCost, chargingCost, total: fuelCost + serviceCost + chargingCost, kmpl, color: COLORS[i % COLORS.length] }
+      return { vehicle: v, fuelCost, serviceCost, chargingCost, total: fuelCost + serviceCost + chargingCost, kmpl, kmpc, color: COLORS[i % COLORS.length] }
     })
 
     // Chart: per vehicle bar data
@@ -156,12 +167,13 @@ export function InsightsPage() {
         </div>
 
         {/* Total Distance KPI */}
-        {data.mileageTrackingEnabled && totalDistance > 0 && (
+        {data.mileageTrackingEnabled && (
           <div className="clay-card p-5">
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <p className="text-xs text-muted-foreground font-medium mb-1">Total Distance</p>
                 <p className="text-3xl font-bold text-foreground">{totalDistance.toLocaleString('en-IN')} km</p>
+                {totalDistance === 0 && <p className="text-xs text-muted-foreground mt-1">Add fuel/charging logs with odometer readings</p>}
               </div>
               <div className="w-12 h-12 rounded-2xl bg-[oklch(0.93_0.06_250)] flex items-center justify-center">
                 <Navigation size={24} strokeWidth={1.5} className="text-[oklch(0.38_0.12_250)]" />
@@ -212,7 +224,7 @@ export function InsightsPage() {
             <p className="text-muted-foreground text-sm leading-relaxed">Add vehicles and log fuel or service entries to see your insights here.</p>
           </div>
         ) : (
-          perVehicle.map(({ vehicle, fuelCost, serviceCost, chargingCost, total, kmpl }) => (
+          perVehicle.map(({ vehicle, fuelCost, serviceCost, chargingCost, total, kmpl, kmpc }) => (
             <div key={vehicle.id} className="clay-card p-5 flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -248,7 +260,7 @@ export function InsightsPage() {
                     <p className="text-sm font-bold text-foreground">{fmt(chargingCost)}</p>
                   </div>
                 )}
-                {data.mileageTrackingEnabled && kmpl && (
+                {data.mileageTrackingEnabled && vehicle.fuelType !== 'electric' && kmpl && (
                   <div className="flex-1 bg-secondary rounded-2xl p-3">
                     <div className="flex items-center gap-1 mb-1">
                       <TrendingUp size={12} strokeWidth={1.75} className="text-primary" />
@@ -257,7 +269,16 @@ export function InsightsPage() {
                     <p className="text-sm font-bold text-foreground">{kmpl.toFixed(1)}</p>
                   </div>
                 )}
-                {vehicle.fuelType === 'electric' && chargingCost === 0 && (
+                {data.mileageTrackingEnabled && vehicle.fuelType === 'electric' && kmpc && (
+                  <div className="flex-1 bg-[oklch(0.93_0.05_180)] rounded-2xl p-3">
+                    <div className="flex items-center gap-1 mb-1">
+                      <TrendingUp size={12} strokeWidth={1.75} className="text-[oklch(0.36_0.09_180)]" />
+                      <p className="text-[10px] text-[oklch(0.36_0.09_180)] font-medium">km/charge</p>
+                    </div>
+                    <p className="text-sm font-bold text-foreground">{kmpc.toFixed(1)}</p>
+                  </div>
+                )}
+                {vehicle.fuelType === 'electric' && !kmpc && chargingCost === 0 && (
                   <div className="flex-1 bg-[oklch(0.93_0.05_180)] rounded-2xl p-3">
                     <div className="flex items-center gap-1 mb-1">
                       <Zap size={12} strokeWidth={1.75} className="text-[oklch(0.36_0.09_180)]" />

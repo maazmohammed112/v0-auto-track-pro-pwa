@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useApp } from '@/lib/context'
+import { shouldShowReminderDueAlert } from '@/lib/store'
 import { Onboarding } from './Onboarding'
 import { BottomNav } from './BottomNav'
 import { HomePage } from './HomePage'
@@ -9,6 +10,7 @@ import { InsightsPage } from './InsightsPage'
 import { SettingsPage } from './SettingsPage'
 import { VehicleDetail } from './VehicleDetail'
 import { OdometerReminder } from './OdometerReminder'
+import { ReminderDueAlert } from './ReminderDueAlert'
 import { LoadingScreen } from './LoadingScreen'
 import { PwaInstallPrompt } from './PwaInstallPrompt'
 import { AddVehicleForm } from './AddVehicleForm'
@@ -16,7 +18,7 @@ import { AddVehicleForm } from './AddVehicleForm'
 type Tab = 'home' | 'insights' | 'settings'
 
 export function AppShell() {
-  const { data, vehiclesNeedingOdometerUpdate, setPwaPromptShown } = useApp()
+  const { data, vehiclesNeedingOdometerUpdate, setPwaPromptShown, completeReminder, snoozeReminder } = useApp()
   const [activeTab, setActiveTab] = useState<Tab>('home')
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null)
   const [selectedVehicleTab, setSelectedVehicleTab] = useState<string | null>(null)
@@ -25,6 +27,13 @@ export function AppShell() {
   const [splashDone, setSplashDone] = useState(false)
   const [reminderDismissed, setReminderDismissed] = useState(false)
   const [showPwaPrompt, setShowPwaPrompt] = useState(false)
+  const [showReminderDueAlert, setShowReminderDueAlert] = useState(false)
+  const [editingReminderId, setEditingReminderId] = useState<string | null>(null)
+  
+  // Find reminders due today that should show alert
+  const reminderDueToday = useMemo(() => {
+    return data.reminders.find(r => shouldShowReminderDueAlert(r))
+  }, [data.reminders])
 
   // Splash animation
   useEffect(() => {
@@ -39,6 +48,14 @@ export function AppShell() {
       return () => clearTimeout(t)
     }
   }, [splashDone, data.onboardingComplete, vehiclesNeedingOdometerUpdate.length, reminderDismissed])
+
+  // Show reminder due today alert
+  useEffect(() => {
+    if (splashDone && data.onboardingComplete && reminderDueToday && !showReminderDueAlert) {
+      const t = setTimeout(() => setShowReminderDueAlert(true), 500)
+      return () => clearTimeout(t)
+    }
+  }, [splashDone, data.onboardingComplete, reminderDueToday, showReminderDueAlert])
 
   // Show PWA prompt for first-time users after onboarding completes
   useEffect(() => {
@@ -121,6 +138,25 @@ export function AppShell() {
 
       {/* PWA install prompt */}
       {showPwaPrompt && <PwaInstallPrompt onDismiss={handlePwaPromptDismiss} />}
+
+      {/* Reminder due today alert */}
+      {showReminderDueAlert && reminderDueToday && (
+        <ReminderDueAlert
+          reminder={reminderDueToday}
+          onMarkDone={() => {
+            completeReminder(reminderDueToday.id)
+            setShowReminderDueAlert(false)
+          }}
+          onEdit={() => {
+            setEditingReminderId(reminderDueToday.id)
+            setShowReminderDueAlert(false)
+          }}
+          onSnooze={() => {
+            snoozeReminder(reminderDueToday.id)
+            setShowReminderDueAlert(false)
+          }}
+        />
+      )}
     </div>
   )
 }
