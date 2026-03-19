@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { TrendingUp, Fuel, Wrench, Zap, BarChart2 } from 'lucide-react'
+import { TrendingUp, Fuel, Wrench, Zap, BarChart2, Navigation } from 'lucide-react'
 import { useApp } from '@/lib/context'
+import { getTotalDistanceDriven, calculateKmPerLiter, calculateKmPerCharge } from '@/lib/store'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 type Timeframe = 'weekly' | 'monthly' | 'all'
@@ -24,19 +25,24 @@ export function InsightsPage() {
   const { data } = useApp()
   const [timeframe, setTimeframe] = useState<Timeframe>('monthly')
 
-  const { totalFuel, totalService, totalAll, perVehicle, fuelEfficiency, chartData } = useMemo(() => {
+  const { totalFuel, totalService, totalCharging, totalAll, totalDistance, perVehicle, fuelEfficiency, chartData } = useMemo(() => {
     const filteredFuel = filterByTimeframe(data.fuelLogs, timeframe)
     const filteredService = filterByTimeframe(data.serviceLogs, timeframe)
+    const filteredCharging = filterByTimeframe(data.chargingLogs, timeframe)
 
     const totalFuel = filteredFuel.reduce((s, l) => s + l.amount, 0)
     const totalService = filteredService.reduce((s, l) => s + l.expense, 0)
-    const totalAll = totalFuel + totalService
+    const totalCharging = filteredCharging.reduce((s, l) => s + l.amountSpent, 0)
+    const totalAll = totalFuel + totalService + totalCharging
+    const totalDistance = getTotalDistanceDriven(data.vehicles, filteredFuel, filteredCharging)
 
     const perVehicle = data.vehicles.map((v, i) => {
       const vFuel = filteredFuel.filter(l => l.vehicleId === v.id)
       const vService = filteredService.filter(l => l.vehicleId === v.id)
+      const vCharging = filteredCharging.filter(l => l.vehicleId === v.id)
       const fuelCost = vFuel.reduce((s, l) => s + l.amount, 0)
       const serviceCost = vService.reduce((s, l) => s + l.expense, 0)
+      const chargingCost = vCharging.reduce((s, l) => s + l.amountSpent, 0)
 
       // Fuel efficiency: if logs have odometer readings, compute km/l
       let kmpl: number | null = null
@@ -49,7 +55,7 @@ export function InsightsPage() {
         }
       }
 
-      return { vehicle: v, fuelCost, serviceCost, total: fuelCost + serviceCost, kmpl, color: COLORS[i % COLORS.length] }
+      return { vehicle: v, fuelCost, serviceCost, chargingCost, total: fuelCost + serviceCost + chargingCost, kmpl, color: COLORS[i % COLORS.length] }
     })
 
     // Chart: per vehicle bar data
@@ -57,10 +63,11 @@ export function InsightsPage() {
       name: pv.vehicle.name.length > 8 ? pv.vehicle.name.slice(0, 8) + '…' : pv.vehicle.name,
       Fuel: Math.round(pv.fuelCost),
       Service: Math.round(pv.serviceCost),
+      Charging: Math.round(pv.chargingCost),
       color: pv.color,
     }))
 
-    return { totalFuel, totalService, totalAll, perVehicle, fuelEfficiency: perVehicle.map(p => p.kmpl), chartData }
+    return { totalFuel, totalService, totalCharging, totalAll, totalDistance, perVehicle, fuelEfficiency: perVehicle.map(p => p.kmpl), chartData }
   }, [data, timeframe])
 
   const timeframes: { id: Timeframe; label: string }[] = [
@@ -119,8 +126,34 @@ export function InsightsPage() {
                 <p className="text-sm font-bold text-foreground">{fmt(totalService)}</p>
               </div>
             </div>
+            {totalCharging > 0 && (
+              <div className="flex-1 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[oklch(0.93_0.05_180)] flex items-center justify-center">
+                  <Zap size={14} strokeWidth={1.75} className="text-[oklch(0.36_0.09_180)]" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Charging</p>
+                  <p className="text-sm font-bold text-foreground">{fmt(totalCharging)}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Total Distance KPI */}
+        {totalDistance > 0 && (
+          <div className="clay-card p-5">
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground font-medium mb-1">Total Distance</p>
+                <p className="text-3xl font-bold text-foreground">{totalDistance.toLocaleString('en-IN')} km</p>
+              </div>
+              <div className="w-12 h-12 rounded-2xl bg-[oklch(0.93_0.06_250)] flex items-center justify-center">
+                <Navigation size={24} strokeWidth={1.5} className="text-[oklch(0.38_0.12_250)]" />
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Bar chart */}
         {chartData.length > 0 && (
@@ -136,6 +169,7 @@ export function InsightsPage() {
                 />
                 <Bar dataKey="Fuel" radius={[6, 6, 0, 0]} fill="oklch(0.55 0.18 250)" />
                 <Bar dataKey="Service" radius={[6, 6, 0, 0]} fill="oklch(0.65 0.15 145)" />
+                <Bar dataKey="Charging" radius={[6, 6, 0, 0]} fill="oklch(0.62 0.14 180)" />
               </BarChart>
             </ResponsiveContainer>
             <div className="flex items-center gap-4 mt-3">
@@ -146,6 +180,10 @@ export function InsightsPage() {
               <div className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-full" style={{ background: 'oklch(0.65 0.15 145)' }} />
                 <span className="text-xs text-muted-foreground font-medium">Service</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 rounded-full" style={{ background: 'oklch(0.62 0.14 180)' }} />
+                <span className="text-xs text-muted-foreground font-medium">Charging</span>
               </div>
             </div>
           </div>
@@ -159,7 +197,7 @@ export function InsightsPage() {
             <p className="text-muted-foreground text-sm leading-relaxed">Add vehicles and log fuel or service entries to see your insights here.</p>
           </div>
         ) : (
-          perVehicle.map(({ vehicle, fuelCost, serviceCost, total, kmpl }) => (
+          perVehicle.map(({ vehicle, fuelCost, serviceCost, chargingCost, total, kmpl }) => (
             <div key={vehicle.id} className="clay-card p-5 flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -186,6 +224,15 @@ export function InsightsPage() {
                   </div>
                   <p className="text-sm font-bold text-foreground">{fmt(serviceCost)}</p>
                 </div>
+                {vehicle.fuelType === 'electric' && chargingCost > 0 && (
+                  <div className="flex-1 bg-[oklch(0.93_0.05_180)] rounded-2xl p-3">
+                    <div className="flex items-center gap-1 mb-1">
+                      <Zap size={12} strokeWidth={1.75} className="text-[oklch(0.36_0.09_180)]" />
+                      <p className="text-[10px] text-[oklch(0.36_0.09_180)] font-medium">Charging</p>
+                    </div>
+                    <p className="text-sm font-bold text-foreground">{fmt(chargingCost)}</p>
+                  </div>
+                )}
                 {kmpl && (
                   <div className="flex-1 bg-secondary rounded-2xl p-3">
                     <div className="flex items-center gap-1 mb-1">
@@ -195,13 +242,13 @@ export function InsightsPage() {
                     <p className="text-sm font-bold text-foreground">{kmpl.toFixed(1)}</p>
                   </div>
                 )}
-                {vehicle.fuelType === 'electric' && (
+                {vehicle.fuelType === 'electric' && chargingCost === 0 && (
                   <div className="flex-1 bg-[oklch(0.93_0.05_180)] rounded-2xl p-3">
                     <div className="flex items-center gap-1 mb-1">
                       <Zap size={12} strokeWidth={1.75} className="text-[oklch(0.36_0.09_180)]" />
                       <p className="text-[10px] text-[oklch(0.36_0.09_180)] font-medium">Electric</p>
                     </div>
-                    <p className="text-xs text-[oklch(0.36_0.09_180)] font-semibold">Service only</p>
+                    <p className="text-xs text-[oklch(0.36_0.09_180)] font-semibold">No charging logs</p>
                   </div>
                 )}
               </div>

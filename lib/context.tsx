@@ -6,6 +6,7 @@ import {
   Vehicle,
   FuelLog,
   ServiceLog,
+  ChargingLog,
   Reminder,
   VehicleDocument,
   UserProfile,
@@ -14,6 +15,7 @@ import {
   generateId,
   needsOdometerUpdate,
   isReminderOverdue,
+  isReminderUpcoming,
 } from './store'
 
 interface AppContextValue {
@@ -29,19 +31,27 @@ interface AppContextValue {
   addServiceLog: (log: Omit<ServiceLog, 'id'>) => void
   updateServiceLog: (id: string, updates: Partial<ServiceLog>) => void
   deleteServiceLog: (id: string) => void
+  addChargingLog: (log: Omit<ChargingLog, 'id'>) => void
+  updateChargingLog: (id: string, updates: Partial<ChargingLog>) => void
+  deleteChargingLog: (id: string) => void
   updateSettings: (settings: Partial<Pick<AppData, 'userName' | 'defaultFuelPrice'>>) => void
   updateUserProfile: (profile: Partial<UserProfile>) => void
   addReminder: (r: Omit<Reminder, 'id' | 'createdAt' | 'isCompleted'>) => Reminder
   updateReminder: (id: string, updates: Partial<Reminder>) => void
   deleteReminder: (id: string) => void
   completeReminder: (id: string) => void
+  snoozeReminder: (id: string) => void
   addDocument: (d: Omit<VehicleDocument, 'id' | 'createdAt'>) => VehicleDocument
   updateDocument: (id: string, updates: Partial<VehicleDocument>) => void
   deleteDocument: (id: string) => void
+  snoozeDocumentAlert: (id: string) => void
+  dismissDocumentAlert: (id: string) => void
+  toggleMileageTracking: () => void
   setData: (data: AppData) => void
   setPwaPromptShown: () => void
   vehiclesNeedingOdometerUpdate: Vehicle[]
   overdueReminders: Reminder[]
+  upcomingReminders: Reminder[]
 }
 
 const AppContext = createContext<AppContextValue | null>(null)
@@ -78,6 +88,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       vehicles: data.vehicles.filter(v => v.id !== id),
       fuelLogs: data.fuelLogs.filter(l => l.vehicleId !== id),
       serviceLogs: data.serviceLogs.filter(l => l.vehicleId !== id),
+      chargingLogs: data.chargingLogs.filter(l => l.vehicleId !== id),
       reminders: data.reminders.filter(r => r.vehicleId !== id),
       documents: data.documents.filter(d => d.vehicleId !== id),
     })
@@ -156,6 +167,37 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     persist({ ...data, serviceLogs: data.serviceLogs.filter(l => l.id !== id) })
   }, [data, persist])
 
+  const addChargingLog = useCallback((log: Omit<ChargingLog, 'id'>) => {
+    const newLog: ChargingLog = { ...log, id: generateId() }
+    let updatedVehicles = data.vehicles
+    if (log.odometer) {
+      updatedVehicles = data.vehicles.map(v =>
+        v.id === log.vehicleId && log.odometer! > v.currentOdometer
+          ? { ...v, currentOdometer: log.odometer!, lastOdometerUpdate: new Date().toISOString() }
+          : v
+      )
+    }
+    persist({ ...data, chargingLogs: [...data.chargingLogs, newLog], vehicles: updatedVehicles })
+  }, [data, persist])
+
+  const updateChargingLog = useCallback((id: string, updates: Partial<ChargingLog>) => {
+    const updatedLogs = data.chargingLogs.map(l => l.id === id ? { ...l, ...updates } : l)
+    const updatedLog = updatedLogs.find(l => l.id === id)
+    let updatedVehicles = data.vehicles
+    if (updatedLog?.odometer) {
+      updatedVehicles = data.vehicles.map(v =>
+        v.id === updatedLog.vehicleId && updatedLog.odometer! > v.currentOdometer
+          ? { ...v, currentOdometer: updatedLog.odometer!, lastOdometerUpdate: new Date().toISOString() }
+          : v
+      )
+    }
+    persist({ ...data, chargingLogs: updatedLogs, vehicles: updatedVehicles })
+  }, [data, persist])
+
+  const deleteChargingLog = useCallback((id: string) => {
+    persist({ ...data, chargingLogs: data.chargingLogs.filter(l => l.id !== id) })
+  }, [data, persist])
+
   const updateSettings = useCallback((settings: Partial<Pick<AppData, 'userName' | 'defaultFuelPrice'>>) => {
     persist({ ...data, ...settings })
   }, [data, persist])
@@ -183,6 +225,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     persist({ ...data, reminders: data.reminders.map(r => r.id === id ? { ...r, isCompleted: true } : r) })
   }, [data, persist])
 
+  const snoozeReminder = useCallback((id: string) => {
+    persist({ ...data, reminders: data.reminders.map(r => r.id === id ? { ...r, lastSnoozedAt: new Date().toISOString() } : r) })
+  }, [data, persist])
+
   // Documents
   const addDocument = useCallback((d: Omit<VehicleDocument, 'id' | 'createdAt'>) => {
     const doc: VehicleDocument = { ...d, id: generateId(), createdAt: new Date().toISOString() }
@@ -198,6 +244,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     persist({ ...data, documents: data.documents.filter(d => d.id !== id) })
   }, [data, persist])
 
+  const snoozeDocumentAlert = useCallback((id: string) => {
+    persist({ ...data, documents: data.documents.map(d => d.id === id ? { ...d, lastAlertTime: new Date().toISOString() } : d) })
+  }, [data, persist])
+
+  const dismissDocumentAlert = useCallback((id: string) => {
+    persist({ ...data, documents: data.documents.map(d => d.id === id ? { ...d, alertDismissed: true } : d) })
+  }, [data, persist])
+
+  const toggleMileageTracking = useCallback(() => {
+    persist({ ...data, mileageTrackingEnabled: !data.mileageTrackingEnabled })
+  }, [data, persist])
+
   const setData = useCallback((newData: AppData) => {
     persist(newData)
   }, [persist])
@@ -208,6 +266,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const vehiclesNeedingOdometerUpdate = data.vehicles.filter(needsOdometerUpdate)
   const overdueReminders = data.reminders.filter(isReminderOverdue)
+  const upcomingReminders = data.reminders.filter(r => isReminderUpcoming(r, 3))
 
   return (
     <AppContext.Provider value={{
@@ -220,6 +279,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       addFuelLog,
       updateFuelLog,
       deleteFuelLog,
+      addChargingLog,
+      updateChargingLog,
+      deleteChargingLog,
       addServiceLog,
       updateServiceLog,
       deleteServiceLog,
@@ -229,13 +291,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       updateReminder,
       deleteReminder,
       completeReminder,
+      snoozeReminder,
       addDocument,
       updateDocument,
       deleteDocument,
+      snoozeDocumentAlert,
+      dismissDocumentAlert,
+      toggleMileageTracking,
       setData,
       setPwaPromptShown,
       vehiclesNeedingOdometerUpdate,
       overdueReminders,
+      upcomingReminders,
     }}>
       {children}
     </AppContext.Provider>

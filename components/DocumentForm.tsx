@@ -20,10 +20,12 @@ const documentTypes: { value: DocumentType; label: string }[] = [
 ]
 
 export function DocumentForm({ vehicleId, onClose, editDocument }: DocumentFormProps) {
-  const { addDocument, updateDocument } = useApp()
+  const { addDocument, updateDocument, data } = useApp()
   const isEdit = !!editDocument
+  const vehicle = data.vehicles.find(v => v.id === vehicleId)
+  const isElectric = vehicle?.fuelType === 'electric'
 
-  const [type, setType] = useState<DocumentType>(editDocument?.type ?? 'puc')
+  const [type, setType] = useState<DocumentType>(editDocument?.type ?? (isElectric ? 'insurance' : 'puc'))
   const [title, setTitle] = useState(editDocument?.title ?? '')
   const [expiryDate, setExpiryDate] = useState(editDocument?.expiryDate ?? '')
   const [link, setLink] = useState(editDocument?.link ?? '')
@@ -109,21 +111,33 @@ export function DocumentForm({ vehicleId, onClose, editDocument }: DocumentFormP
               <FileText size={12} strokeWidth={2} /> Document Type
             </label>
             <div className="flex flex-wrap gap-2">
-              {documentTypes.map(({ value, label }) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => handleTypeChange(value)}
-                  className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
-                    type === value
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+              {documentTypes.map(({ value, label }) => {
+                const isPucDisabled = isElectric && value === 'puc'
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => !isPucDisabled && handleTypeChange(value)}
+                    disabled={isPucDisabled}
+                    className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-all ${
+                      isPucDisabled
+                        ? 'opacity-50 cursor-not-allowed bg-secondary text-muted-foreground'
+                        : type === value
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-muted-foreground hover:text-foreground'
+                    }`}
+                    title={isPucDisabled ? 'PUC is not required for electric vehicles' : ''}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
             </div>
+            {isElectric && (
+              <p className="text-xs text-muted-foreground mt-2.5 leading-relaxed p-2.5 rounded-lg bg-secondary">
+                💡 PUC is not required for electric vehicles
+              </p>
+            )}
           </div>
 
           {/* Title */}

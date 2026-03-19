@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { ArrowLeft, Fuel, Wrench, Gauge, Edit2, Trash2, Plus, Zap, Bell, FileText, Check, ExternalLink, AlertTriangle, Calendar, Eye, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { useApp } from '@/lib/context'
-import type { Vehicle, FuelLog, ServiceLog, Reminder, VehicleDocument } from '@/lib/store'
-import { isReminderOverdue, getReminderDaysUntil, isDocumentExpired, isDocumentExpiringSoon } from '@/lib/store'
+import type { Vehicle, FuelLog, ServiceLog, ChargingLog, Reminder, VehicleDocument } from '@/lib/store'
+import { isReminderOverdue, isReminderUpcoming, getReminderDaysUntil, isDocumentExpired, isDocumentExpiringSoon } from '@/lib/store'
 import { FuelLogForm } from './FuelLogForm'
 import { ServiceLogForm } from './ServiceLogForm'
+import { ChargingLogForm } from './ChargingLogForm'
 import { AddVehicleForm } from './AddVehicleForm'
 import { ReminderForm } from './ReminderForm'
 import { DocumentForm } from './DocumentForm'
@@ -17,7 +18,7 @@ interface VehicleDetailProps {
   onBack: () => void
 }
 
-type ActiveTab = 'overview' | 'fuel' | 'service' | 'reminders' | 'documents'
+type ActiveTab = 'overview' | 'fuel' | 'charging' | 'service' | 'reminders' | 'documents'
 
 const fuelBadge = {
   petrol: { label: 'Petrol', bg: 'bg-[oklch(0.93_0.06_250)]', text: 'text-[oklch(0.38_0.12_250)]' },
@@ -145,6 +146,18 @@ function ServiceDetailModal({ log, onClose }: { log: ServiceLog; onClose: () => 
   )
 }
 
+function ChargingDetailModal({ log, onClose }: { log: ChargingLog; onClose: () => void }) {
+  return (
+    <DetailModal title="Charging Entry Details" icon={<Zap size={16} strokeWidth={1.75} className="text-[oklch(0.36_0.09_180)]" />} onClose={onClose}>
+      <DetailRow label="Date" value={formatDate(log.date)} />
+      <DetailRow label="Amount Spent" value={`Rs.${log.amountSpent.toLocaleString('en-IN')}`} />
+      <DetailRow label="Charging Type" value={log.chargingType ? (log.chargingType === 'home' ? 'Home Charging' : 'Public Charging') : null} />
+      <DetailRow label="Odometer" value={log.odometer ? `${log.odometer.toLocaleString('en-IN')} km` : null} />
+      <DetailRow label="Notes" value={log.notes} />
+    </DetailModal>
+  )
+}
+
 function ReminderDetailModal({ reminder, onClose }: { reminder: Reminder; onClose: () => void }) {
   const overdue = isReminderOverdue(reminder)
   const daysUntil = getReminderDaysUntil(reminder)
@@ -187,28 +200,32 @@ function DocumentDetailModal({ doc, onOpen, onClose }: { doc: VehicleDocument; o
 }
 
 export function VehicleDetail({ vehicleId, onBack }: VehicleDetailProps) {
-  const { data, deleteVehicle, deleteFuelLog, deleteServiceLog, deleteReminder, completeReminder, deleteDocument } = useApp()
+  const { data, deleteVehicle, deleteFuelLog, deleteServiceLog, deleteChargingLog, deleteReminder, completeReminder, deleteDocument } = useApp()
   const vehicle = data.vehicles.find(v => v.id === vehicleId)
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
   const [showFuelForm, setShowFuelForm] = useState(false)
+  const [showChargingForm, setShowChargingForm] = useState(false)
   const [showServiceForm, setShowServiceForm] = useState(false)
   const [showEditVehicle, setShowEditVehicle] = useState(false)
   const [showReminderForm, setShowReminderForm] = useState(false)
   const [showDocumentForm, setShowDocumentForm] = useState(false)
   const [editFuelLog, setEditFuelLog] = useState<FuelLog | undefined>()
+  const [editChargingLog, setEditChargingLog] = useState<ChargingLog | undefined>()
   const [editServiceLog, setEditServiceLog] = useState<ServiceLog | undefined>()
   const [editReminder, setEditReminder] = useState<Reminder | undefined>()
   const [editDocument, setEditDocument] = useState<VehicleDocument | undefined>()
   const [viewFuelLog, setViewFuelLog] = useState<FuelLog | undefined>()
+  const [viewChargingLog, setViewChargingLog] = useState<ChargingLog | undefined>()
   const [viewServiceLog, setViewServiceLog] = useState<ServiceLog | undefined>()
   const [viewReminder, setViewReminder] = useState<Reminder | undefined>()
   const [viewDocument, setViewDocument] = useState<VehicleDocument | undefined>()
-  const [confirmDelete, setConfirmDelete] = useState<{ type: 'vehicle' | 'fuel' | 'service' | 'reminder' | 'document'; id?: string } | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<{ type: 'vehicle' | 'fuel' | 'charging' | 'service' | 'reminder' | 'document'; id?: string } | null>(null)
   const [externalLinkWarning, setExternalLinkWarning] = useState<string | null>(null)
 
   if (!vehicle) return null
 
   const fuelLogs = data.fuelLogs.filter(l => l.vehicleId === vehicleId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  const chargingLogs = data.chargingLogs.filter(l => l.vehicleId === vehicleId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   const serviceLogs = data.serviceLogs.filter(l => l.vehicleId === vehicleId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   const reminders = data.reminders.filter(r => r.vehicleId === vehicleId).sort((a, b) => {
     // Sort: incomplete first (by due date), then completed
@@ -220,6 +237,7 @@ export function VehicleDetail({ vehicleId, onBack }: VehicleDetailProps) {
   const isElectric = vehicle.fuelType === 'electric'
   const badge = fuelBadge[vehicle.fuelType]
   const overdueCount = reminders.filter(r => !r.isCompleted && isReminderOverdue(r)).length
+  const upcomingCount = reminders.filter(r => isReminderUpcoming(r, 3)).length
 
   function handleDeleteVehicle() {
     deleteVehicle(vehicleId)
@@ -235,8 +253,9 @@ export function VehicleDetail({ vehicleId, onBack }: VehicleDetailProps) {
   const tabs: { id: ActiveTab; label: string; hidden?: boolean; badge?: number }[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'fuel', label: 'Fuel', hidden: isElectric },
+    { id: 'charging', label: 'Charging', hidden: !isElectric },
     { id: 'service', label: 'Service' },
-    { id: 'reminders', label: 'Reminders', badge: overdueCount > 0 ? overdueCount : undefined },
+    { id: 'reminders', label: 'Reminders', badge: overdueCount > 0 ? overdueCount : (upcomingCount > 0 ? upcomingCount : undefined) },
     { id: 'documents', label: 'Documents' },
   ].filter(t => !t.hidden)
 
@@ -418,6 +437,51 @@ export function VehicleDetail({ vehicleId, onBack }: VehicleDetailProps) {
                       <Edit2 size={13} strokeWidth={1.75} className="text-foreground" />
                     </button>
                     <button onClick={() => setConfirmDelete({ type: 'fuel', id: log.id })} className="w-8 h-8 rounded-xl bg-[oklch(0.95_0.05_25)] flex items-center justify-center">
+                      <Trash2 size={13} strokeWidth={1.75} className="text-destructive" />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {activeTab === 'charging' && isElectric && (
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => setShowChargingForm(true)}
+              className="w-full py-3.5 rounded-2xl font-semibold text-white text-sm flex items-center justify-center gap-2 transition-all active:scale-95"
+              style={{ background: 'oklch(0.55 0.18 250)', boxShadow: '0 4px 16px oklch(0.55 0.18 250 / 0.3)' }}
+            >
+              <Plus size={16} strokeWidth={2} /> Add Charging Entry
+            </button>
+
+            {chargingLogs.length === 0 ? (
+              <div className="clay-card p-8 text-center">
+                <Zap size={32} strokeWidth={1.5} className="text-muted-foreground mx-auto mb-3" />
+                <p className="text-foreground font-semibold mb-1">No charging logs yet</p>
+                <p className="text-muted-foreground text-sm">Add your first charging entry above.</p>
+              </div>
+            ) : (
+              chargingLogs.map(log => (
+                <div key={log.id} className="clay-card p-4 flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-sm font-bold text-foreground">Rs.{log.amountSpent.toLocaleString('en-IN')}</p>
+                      {log.chargingType && <span className="text-xs text-muted-foreground">- {log.chargingType === 'home' ? 'Home' : 'Public'}</span>}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{formatDate(log.date)}</p>
+                    {log.odometer && <p className="text-xs text-muted-foreground mt-0.5">{log.odometer.toLocaleString('en-IN')} km</p>}
+                    {log.notes && <p className="text-xs text-muted-foreground mt-0.5 italic truncate">{log.notes}</p>}
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <button onClick={() => setViewChargingLog(log)} className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center" aria-label="View details">
+                      <Eye size={13} strokeWidth={1.75} className="text-primary" />
+                    </button>
+                    <button onClick={() => setEditChargingLog(log)} className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center">
+                      <Edit2 size={13} strokeWidth={1.75} className="text-foreground" />
+                    </button>
+                    <button onClick={() => setConfirmDelete({ type: 'charging', id: log.id })} className="w-8 h-8 rounded-xl bg-[oklch(0.95_0.05_25)] flex items-center justify-center">
                       <Trash2 size={13} strokeWidth={1.75} className="text-destructive" />
                     </button>
                   </div>
@@ -634,6 +698,7 @@ export function VehicleDetail({ vehicleId, onBack }: VehicleDetailProps) {
 
       {/* Detail view modals */}
       {viewFuelLog && <FuelDetailModal log={viewFuelLog} onClose={() => setViewFuelLog(undefined)} />}
+      {viewChargingLog && <ChargingDetailModal log={viewChargingLog} onClose={() => setViewChargingLog(undefined)} />}
       {viewServiceLog && <ServiceDetailModal log={viewServiceLog} onClose={() => setViewServiceLog(undefined)} />}
       {viewReminder && <ReminderDetailModal reminder={viewReminder} onClose={() => setViewReminder(undefined)} />}
       {viewDocument && <DocumentDetailModal doc={viewDocument} onOpen={(url) => setExternalLinkWarning(url)} onClose={() => setViewDocument(undefined)} />}
@@ -641,6 +706,8 @@ export function VehicleDetail({ vehicleId, onBack }: VehicleDetailProps) {
       {/* Modals */}
       {showFuelForm && <FuelLogForm vehicleId={vehicleId} onClose={() => setShowFuelForm(false)} />}
       {editFuelLog && <FuelLogForm vehicleId={vehicleId} onClose={() => setEditFuelLog(undefined)} editLog={editFuelLog} />}
+      {showChargingForm && <ChargingLogForm vehicleId={vehicleId} onClose={() => setShowChargingForm(false)} />}
+      {editChargingLog && <ChargingLogForm vehicleId={vehicleId} onClose={() => setEditChargingLog(undefined)} editLog={editChargingLog} />}
       {showServiceForm && <ServiceLogForm vehicleId={vehicleId} onClose={() => setShowServiceForm(false)} />}
       {editServiceLog && <ServiceLogForm vehicleId={vehicleId} onClose={() => setEditServiceLog(undefined)} editLog={editServiceLog} />}
       {showEditVehicle && <AddVehicleForm onClose={() => setShowEditVehicle(false)} editVehicle={vehicle} />}
@@ -654,12 +721,14 @@ export function VehicleDetail({ vehicleId, onBack }: VehicleDetailProps) {
           label={
             confirmDelete.type === 'vehicle' ? 'this vehicle' :
             confirmDelete.type === 'fuel' ? 'this fuel log' :
+            confirmDelete.type === 'charging' ? 'this charging log' :
             confirmDelete.type === 'service' ? 'this service log' :
             confirmDelete.type === 'reminder' ? 'this reminder' : 'this document'
           }
           onConfirm={() => {
             if (confirmDelete.type === 'vehicle') handleDeleteVehicle()
             else if (confirmDelete.type === 'fuel' && confirmDelete.id) { deleteFuelLog(confirmDelete.id); toast('Fuel log deleted') }
+            else if (confirmDelete.type === 'charging' && confirmDelete.id) { deleteChargingLog(confirmDelete.id); toast('Charging log deleted') }
             else if (confirmDelete.type === 'service' && confirmDelete.id) { deleteServiceLog(confirmDelete.id); toast('Service log deleted') }
             else if (confirmDelete.type === 'reminder' && confirmDelete.id) { deleteReminder(confirmDelete.id); toast('Reminder deleted') }
             else if (confirmDelete.type === 'document' && confirmDelete.id) { deleteDocument(confirmDelete.id); toast('Document deleted') }

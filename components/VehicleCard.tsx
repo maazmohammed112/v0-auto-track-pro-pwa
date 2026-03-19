@@ -2,7 +2,7 @@
 
 import { Car, Bike, Zap, AlertCircle, Bell } from 'lucide-react'
 import type { Vehicle, Reminder, VehicleDocument } from '@/lib/store'
-import { needsOdometerUpdate, isReminderOverdue, isDocumentExpired, isDocumentExpiringSoon } from '@/lib/store'
+import { needsOdometerUpdate, isReminderOverdue, isReminderUpcoming, isDocumentExpired, isDocumentExpiringSoon } from '@/lib/store'
 import { cn } from '@/lib/utils'
 
 const vehicleIcons = {
@@ -34,8 +34,10 @@ export function VehicleCard({ vehicle, reminders, documents, onClick }: VehicleC
   
   // Count overdue/expiring items
   const overdueReminders = reminders.filter(isReminderOverdue).length
+  const upcomingReminders = reminders.filter(r => isReminderUpcoming(r, 3)).length
   const expiringDocs = documents.filter(d => isDocumentExpired(d) || isDocumentExpiringSoon(d)).length
   const totalAlerts = overdueReminders + expiringDocs
+  const hasUpcoming = upcomingReminders > 0 && overdueReminders === 0
 
   return (
     <button
@@ -60,14 +62,20 @@ export function VehicleCard({ vehicle, reminders, documents, onClick }: VehicleC
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-bold text-foreground text-base leading-tight truncate">{vehicle.name}</h3>
           <div className="flex items-center gap-1.5 shrink-0">
-            {totalAlerts > 0 && (
-              <div className="flex items-center gap-1 bg-[oklch(0.93_0.05_60)] text-[oklch(0.42_0.10_60)] text-[10px] font-semibold px-2 py-1 rounded-full">
+            {hasUpcoming && (
+              <div className="flex items-center gap-1 bg-[oklch(0.93_0.06_250)] text-[oklch(0.38_0.12_250)] text-[10px] font-semibold px-2 py-1 rounded-full" title="Reminder due soon">
                 <Bell size={10} strokeWidth={2} />
+                {upcomingReminders}
+              </div>
+            )}
+            {totalAlerts > 0 && (
+              <div className="flex items-center gap-1 bg-[oklch(0.93_0.05_60)] text-[oklch(0.42_0.10_60)] text-[10px] font-semibold px-2 py-1 rounded-full" title="Overdue or expiring">
+                <AlertCircle size={10} strokeWidth={2} />
                 {totalAlerts}
               </div>
             )}
             {pendingUpdate && (
-              <div className="flex items-center gap-1 bg-[oklch(0.95_0.05_25)] text-[oklch(0.45_0.18_25)] text-[10px] font-semibold px-2 py-1 rounded-full">
+              <div className="flex items-center gap-1 bg-[oklch(0.95_0.05_25)] text-[oklch(0.45_0.18_25)] text-[10px] font-semibold px-2 py-1 rounded-full" title="Odometer update needed">
                 <AlertCircle size={10} strokeWidth={2} />
                 Pending
               </div>

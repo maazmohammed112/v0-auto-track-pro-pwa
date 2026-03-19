@@ -2,6 +2,7 @@
 
 import { Plus, Car, UserCircle } from 'lucide-react'
 import { useApp } from '@/lib/context'
+import { isReminderUpcoming, isReminderOverdue } from '@/lib/store'
 import { VehicleCard } from './VehicleCard'
 
 interface HomePageProps {
@@ -62,7 +63,27 @@ export function HomePage({ onSelectVehicle, onGoToSettings, onAddVehicle }: Home
           </div>
         ) : (
           <div className="flex flex-col gap-3 pb-36">
-            {data.vehicles.map(vehicle => (
+            {data.vehicles.sort((a, b) => {
+              // Get reminders for each vehicle
+              const aReminders = data.reminders.filter(r => r.vehicleId === a.id && !r.isCompleted)
+              const bReminders = data.reminders.filter(r => r.vehicleId === b.id && !r.isCompleted)
+              
+              // Check for overdue reminders (higher priority)
+              const aHasOverdue = aReminders.some(isReminderOverdue)
+              const bHasOverdue = bReminders.some(isReminderOverdue)
+              
+              if (aHasOverdue && !bHasOverdue) return -1
+              if (!aHasOverdue && bHasOverdue) return 1
+              
+              // Check for upcoming reminders (within 3 days)
+              const aHasUpcoming = aReminders.some(r => isReminderUpcoming(r, 3))
+              const bHasUpcoming = bReminders.some(r => isReminderUpcoming(r, 3))
+              
+              if (aHasUpcoming && !bHasUpcoming) return -1
+              if (!aHasUpcoming && bHasUpcoming) return 1
+              
+              return 0
+            }).map(vehicle => (
               <VehicleCard
                 key={vehicle.id}
                 vehicle={vehicle}
