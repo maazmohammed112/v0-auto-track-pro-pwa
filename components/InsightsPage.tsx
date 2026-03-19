@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { TrendingUp, Fuel, Wrench, Zap, BarChart2, Settings } from 'lucide-react'
+import { TrendingUp, Fuel, Wrench, Zap, BarChart2, Settings, Navigation } from 'lucide-react'
 import { useApp } from '@/lib/context'
 import { getTotalDistanceDriven, calculateKmPerLiter, calculateKmPerCharge } from '@/lib/store'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
@@ -100,15 +100,13 @@ export function InsightsPage() {
             <h1 className="text-2xl font-bold text-foreground">Insights</h1>
             <p className="text-muted-foreground text-sm mt-0.5">Your expense overview</p>
           </div>
-          {data.mileageTrackingEnabled && (
-            <button
-              onClick={() => setMileageModalOpen(true)}
-              className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center transition-all active:scale-95 hover:bg-secondary/80"
-              title="View mileage details"
-            >
-              <Settings size={18} strokeWidth={1.75} className="text-primary" />
-            </button>
-          )}
+          <button
+            onClick={() => setMileageModalOpen(true)}
+            className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center transition-all active:scale-95 hover:bg-primary/90"
+            title="View mileage & efficiency details"
+          >
+            <Settings size={18} strokeWidth={2} className="text-white" />
+          </button>
         </div>
       </div>
 
@@ -168,7 +166,19 @@ export function InsightsPage() {
           </div>
         </div>
 
-
+        {/* Total Distance KPI */}
+        <div className="clay-card p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground font-medium mb-1">Total Distance</p>
+              <p className="text-3xl font-bold text-foreground">{totalDistance.toLocaleString('en-IN')} km</p>
+              <p className="text-xs text-muted-foreground mt-1">across all vehicles</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-[oklch(0.93_0.06_250)] flex items-center justify-center">
+              <Navigation size={24} strokeWidth={1.5} className="text-[oklch(0.38_0.12_250)]" />
+            </div>
+          </div>
+        </div>
 
         {/* Bar chart */}
         {chartData.length > 0 && (
