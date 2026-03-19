@@ -56,9 +56,12 @@ export function VehicleCard({ vehicle, reminders, documents, onClick, onNavigate
   }
 
   return (
-    <button
+    <div
       onClick={onClick}
-      className="clay-card w-full text-left p-5 flex items-center gap-4 active:scale-[0.98] transition-transform duration-150"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick()}
+      className="clay-card w-full text-left p-5 flex items-center gap-4 active:scale-[0.98] transition-transform duration-150 cursor-pointer"
     >
       {/* Vehicle type icon */}
       <div
@@ -78,30 +81,33 @@ export function VehicleCard({ vehicle, reminders, documents, onClick, onNavigate
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-bold text-foreground text-base leading-tight truncate">{vehicle.name}</h3>
           <div className="flex items-center gap-1.5 shrink-0 relative">
+            {/* Reminder Badge - Blue */}
             {hasUpcoming && (
               <div
-                onClick={handleReminderClick}
+                onClick={(e) => { e.stopPropagation(); handleReminderClick(e as any) }}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleReminderClick(e as any)}
-                className="flex items-center gap-1 bg-[oklch(0.93_0.06_250)] text-[oklch(0.38_0.12_250)] text-[10px] font-semibold px-2 py-1 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
-                title="Reminder due soon - click for details"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); handleReminderClick(e as any) } }}
+                className="flex items-center gap-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 text-[10px] font-semibold px-2.5 py-1.5 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
+                title="Click to see upcoming reminders"
               >
                 <Bell size={10} strokeWidth={2} />
-                {upcomingReminders}
+                <span>{upcomingReminders} reminder{upcomingReminders !== 1 ? 's' : ''}</span>
               </div>
             )}
-            {totalAlerts > 0 && (
+            
+            {/* Document Badge - Red/Orange */}
+            {expiringDocs > 0 && (
               <div
-                onClick={handleDocumentClick}
+                onClick={(e) => { e.stopPropagation(); handleDocumentClick(e as any) }}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && handleDocumentClick(e as any)}
-                className="flex items-center gap-1 bg-[oklch(0.93_0.05_60)] text-[oklch(0.42_0.10_60)] text-[10px] font-semibold px-2 py-1 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
-                title="Documents expiring or overdue - click for details"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); handleDocumentClick(e as any) } }}
+                className="flex items-center gap-1 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 text-[10px] font-semibold px-2.5 py-1.5 rounded-full hover:opacity-80 transition-opacity cursor-pointer"
+                title="Click to see expiring documents"
               >
                 <AlertCircle size={10} strokeWidth={2} />
-                {totalAlerts}
+                <span>{expiringDocs} document{expiringDocs !== 1 ? 's' : ''}</span>
               </div>
             )}
             {pendingUpdate && (
@@ -202,7 +208,7 @@ export function VehicleCard({ vehicle, reminders, documents, onClick, onNavigate
             {vehicle.currentOdometer.toLocaleString('en-IN')} km
           </span>
         </div>
-      </div>
-    </button>
+      )}
+    </div>
   )
 }
