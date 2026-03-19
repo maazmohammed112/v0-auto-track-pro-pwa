@@ -261,21 +261,27 @@ export function InsightsPage() {
                   </div>
                 )}
                 {data.mileageTrackingEnabled && vehicle.fuelType !== 'electric' && kmpl && (
-                  <div className="flex-1 bg-secondary rounded-2xl p-3">
-                    <div className="flex items-center gap-1 mb-1">
-                      <TrendingUp size={12} strokeWidth={1.75} className="text-primary" />
-                      <p className="text-[10px] text-muted-foreground font-medium">km/L</p>
+                  <div className="flex-1 flex flex-col">
+                    <div className="flex-1 bg-secondary rounded-2xl p-3">
+                      <div className="flex items-center gap-1 mb-1">
+                        <TrendingUp size={12} strokeWidth={1.75} className="text-primary" />
+                        <p className="text-[10px] text-muted-foreground font-medium">km/L</p>
+                      </div>
+                      <p className="text-sm font-bold text-foreground">{kmpl.toFixed(1)}</p>
                     </div>
-                    <p className="text-sm font-bold text-foreground">{kmpl.toFixed(1)}</p>
+                    <p className="text-[9px] text-muted-foreground mt-1.5 leading-tight">Based on fuel logs with odometer readings</p>
                   </div>
                 )}
                 {data.mileageTrackingEnabled && vehicle.fuelType === 'electric' && kmpc && (
-                  <div className="flex-1 bg-[oklch(0.93_0.05_180)] rounded-2xl p-3">
-                    <div className="flex items-center gap-1 mb-1">
-                      <TrendingUp size={12} strokeWidth={1.75} className="text-[oklch(0.36_0.09_180)]" />
-                      <p className="text-[10px] text-[oklch(0.36_0.09_180)] font-medium">km/charge</p>
+                  <div className="flex-1 flex flex-col">
+                    <div className="flex-1 bg-[oklch(0.93_0.05_180)] rounded-2xl p-3">
+                      <div className="flex items-center gap-1 mb-1">
+                        <TrendingUp size={12} strokeWidth={1.75} className="text-[oklch(0.36_0.09_180)]" />
+                        <p className="text-[10px] text-[oklch(0.36_0.09_180)] font-medium">km/charge</p>
+                      </div>
+                      <p className="text-sm font-bold text-foreground">{kmpc.toFixed(1)}</p>
                     </div>
-                    <p className="text-sm font-bold text-foreground">{kmpc.toFixed(1)}</p>
+                    <p className="text-[9px] text-[oklch(0.36_0.09_180)] mt-1.5 leading-tight">Based on charging logs with odometer readings</p>
                   </div>
                 )}
                 {vehicle.fuelType === 'electric' && !kmpc && chargingCost === 0 && (

@@ -205,7 +205,10 @@ export function ReminderForm({ vehicleId, onClose, editReminder }: ReminderFormP
                     <strong>Service due at:</strong> {Number(dueMileage).toLocaleString('en-IN')} km
                   </p>
                   <p>
-                    <strong>Alert will trigger at:</strong> {Math.max(0, Number(dueMileage) - 200).toLocaleString('en-IN')} km ({Math.max(0, Number(dueMileage) - 200 - vehicle.currentOdometer).toLocaleString('en-IN')} km away)
+                    <strong>Alert will trigger at:</strong> {Math.max(0, Number(dueMileage) - 200).toLocaleString('en-IN')} km
+                  </p>
+                  <p className="mt-1.5">
+                    <strong>Distance to alert:</strong> {Math.max(0, Number(dueMileage) - 200 - vehicle.currentOdometer).toLocaleString('en-IN')} km away
                   </p>
                 </div>
               )}
