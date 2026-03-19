@@ -29,6 +29,7 @@ export function ReminderForm({ vehicleId, onClose, editReminder }: ReminderFormP
   const [title, setTitle] = useState(editReminder?.title ?? '')
   const [dueDate, setDueDate] = useState(editReminder?.dueDate ?? '')
   const [dueMileage, setDueMileage] = useState(editReminder?.dueMileage?.toString() ?? '')
+  const [distanceToAdd, setDistanceToAdd] = useState<string>('')
   const [isMileageBased, setIsMileageBased] = useState(editReminder?.isMileageBased ?? false)
   const [notes, setNotes] = useState(editReminder?.notes ?? '')
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -54,7 +55,9 @@ export function ReminderForm({ vehicleId, onClose, editReminder }: ReminderFormP
     const errs: Record<string, string> = {}
     if (!title.trim()) errs.title = 'Title is required'
     if (isMileageBased) {
-      if (!dueMileage) errs.dueMileage = 'Due mileage is required for km-based reminders'
+      if (!distanceToAdd) errs.distance = 'Distance is required for km-based reminders'
+      const distance = Number(distanceToAdd)
+      if (distance <= 0) errs.distance = 'Distance must be greater than 0'
     } else {
       if (!dueDate) errs.dueDate = 'Due date is required'
     }
@@ -66,12 +69,19 @@ export function ReminderForm({ vehicleId, onClose, editReminder }: ReminderFormP
     e.preventDefault()
     if (!validate()) return
 
+    // Auto-calculate due mileage based on current odometer + distance input
+    let calculatedDueMileage = dueMileage
+    if (isMileageBased && distanceToAdd && vehicle) {
+      const distance = Number(distanceToAdd)
+      calculatedDueMileage = String(vehicle.currentOdometer + distance)
+    }
+
     const reminderData = {
       vehicleId,
       type,
       title: title.trim(),
       dueDate: isMileageBased ? '' : dueDate,
-      dueMileage: dueMileage ? Number(dueMileage) : undefined,
+      dueMileage: calculatedDueMileage ? Number(calculatedDueMileage) : undefined,
       notes: notes.trim() || undefined,
       isMileageBased,
     }
@@ -182,39 +192,43 @@ export function ReminderForm({ vehicleId, onClose, editReminder }: ReminderFormP
             </div>
           )}
 
-          {/* Due Mileage (conditional) */}
+          {/* Distance Input (conditional) - Simplified KM-Based */}
           {isMileageBased && (
             <div>
               <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                <Gauge size={12} strokeWidth={2} /> Due at Mileage (km) *
+                <Gauge size={12} strokeWidth={2} /> Distance to Add (km) *
               </label>
               <input
                 type="number"
-                value={dueMileage}
-                onChange={e => setDueMileage(e.target.value)}
-                placeholder={vehicle ? `Current: ${vehicle.currentOdometer.toLocaleString('en-IN')} km` : 'e.g. 50000'}
-                className={`${inputClass} ${errors.dueMileage ? 'ring-2 ring-destructive/50' : ''}`}
+                value={distanceToAdd}
+                onChange={e => setDistanceToAdd(e.target.value)}
+                placeholder="e.g. 3000"
+                className={`${inputClass} ${errors.distance ? 'ring-2 ring-destructive/50' : ''}`}
               />
-              {errors.dueMileage && <p className="text-destructive text-xs mt-1">{errors.dueMileage}</p>}
-              {isMileageBased && vehicle && dueMileage && (() => {
-                const dueMileageNum = Number(dueMileage)
-                const alertAt = Math.max(0, dueMileageNum - 200)
+              {errors.distance && <p className="text-destructive text-xs mt-1">{errors.distance}</p>}
+              {isMileageBased && vehicle && distanceToAdd && (() => {
+                const distance = Number(distanceToAdd)
+                const calculatedDue = vehicle.currentOdometer + distance
+                const alertAt = Math.max(0, calculatedDue - 200)
                 const kmRemaining = alertAt - vehicle.currentOdometer
-                const hasAlertPassed = vehicle.currentOdometer >= alertAt
                 
                 return (
-                  <div className="mt-3 p-2.5 rounded-xl bg-secondary text-xs text-muted-foreground leading-relaxed">
-                    <p className="mb-1.5">
-                      <strong>Current odometer:</strong> {vehicle.currentOdometer.toLocaleString('en-IN')} km
-                    </p>
-                    <p className="mb-1.5">
-                      <strong>Service due at:</strong> {dueMileageNum.toLocaleString('en-IN')} km
-                    </p>
-                    <p className="mb-1.5">
-                      <strong>Alert will trigger at:</strong> {alertAt.toLocaleString('en-IN')} km
+                  <div className="mt-3 p-3 rounded-xl bg-secondary text-xs text-muted-foreground leading-relaxed space-y-1.5">
+                    <p>
+                      <strong>Current odometer:</strong> <span className="text-foreground font-semibold">{vehicle.currentOdometer.toLocaleString('en-IN')} km</span>
                     </p>
                     <p>
-                      <strong>Distance to alert:</strong> {hasAlertPassed ? <span className="text-destructive">Alert already triggered ({Math.abs(kmRemaining).toLocaleString('en-IN')} km ago)</span> : <span>{kmRemaining.toLocaleString('en-IN')} km away</span>}
+                      <strong>Distance to add:</strong> <span className="text-foreground font-semibold">{distance.toLocaleString('en-IN')} km</span>
+                    </p>
+                    <div className="h-px bg-border my-2" />
+                    <p>
+                      <strong>Service due at:</strong> <span className="text-foreground font-semibold">{calculatedDue.toLocaleString('en-IN')} km</span>
+                    </p>
+                    <p>
+                      <strong>Alert triggers at:</strong> <span className="text-destructive font-semibold">{alertAt.toLocaleString('en-IN')} km</span>
+                    </p>
+                    <p>
+                      <strong>Distance remaining:</strong> <span className="text-primary font-semibold">{kmRemaining.toLocaleString('en-IN')} km</span>
                     </p>
                   </div>
                 )

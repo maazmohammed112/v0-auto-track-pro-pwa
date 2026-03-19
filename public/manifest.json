@@ -1,12 +1,26 @@
 {
-  "name": "AutoTrackPro",
+  "name": "AutoTrackPro - Vehicle Management & Expense Tracker",
   "short_name": "AutoTrack",
-  "description": "Personal vehicle management — track fuel, service, and expenses",
+  "description": "Track vehicle expenses, fuel consumption, service schedules, and mileage across multiple vehicles with smart km-based reminders",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#F5F4F0",
-  "theme_color": "#F5F4F0",
+  "theme_color": "#2B59B7",
   "orientation": "portrait",
+  "screenshots": [
+    {
+      "src": "/screenshot-1.png",
+      "type": "image/png",
+      "sizes": "540x720",
+      "purpose": "any"
+    },
+    {
+      "src": "/screenshot-2.png",
+      "type": "image/png",
+      "sizes": "1280x720",
+      "purpose": "any"
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -21,9 +35,23 @@
       "purpose": "any"
     },
     {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    },
+    {
       "src": "/logo.png",
       "type": "image/png",
       "sizes": "any"
     }
-  ]
+  ],
+  "categories": ["productivity", "utilities"],
+  "prefer_related_applications": false
 }
